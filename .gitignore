@@ -1,0 +1,16 @@
+nob
+nob.old
+build/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+org-blog
+test_string
+.DS_Store
+*~
+#*
+.vscode/
+.idea/

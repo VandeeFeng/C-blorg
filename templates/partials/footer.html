@@ -1,0 +1,27 @@
+<div id="postamble" class="status">
+  <div id="search-results"></div>
+  <footer>
+    <p>
+      © 2022-<script>document.write(new Date().getFullYear())</script> Vandee. All rights reserved.
+    </p>
+    <div class="social-links"></div>
+  </footer>
+
+  <a href="#top" aria-label="go to top" title="Go to Top (Alt + G)"
+     class="top-link" id="top-link" accesskey="g">
+     <i class="ri-arrow-up-double-line ri-3x"></i>
+  </a>
+
+  <script>
+    var mybutton = document.getElementById('top-link');
+    window.onscroll = function () {
+      if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+        mybutton.style.visibility = 'visible';
+        mybutton.style.opacity = '1';
+      } else {
+        mybutton.style.visibility = 'hidden';
+        mybutton.style.opacity = '0';
+      }
+    };
+  </script>
+</div>

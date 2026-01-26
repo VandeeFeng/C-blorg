@@ -1,0 +1,26 @@
+#+title: Test Document
+#+date: 2026-01-26
+#+filetags: test example
+
+* First Heading
+
+This is the first paragraph.
+
+[[https://example.com][This is a test link]]
+
+[[file:image.png]]
+
+* Second Heading with inline link
+
+Here's a paragraph with [[https://www.vandee.art][a link]] embedded in text.
+
+Another paragraph.
+
+* Bug Fix Test: Heading followed by text without blank line
+This should be a separate paragraph, not part of the heading.
+
+* Bug Fix Test: Multiple consecutive headings
+** Level 2 heading
+*** Level 3 heading
+
+This should be a paragraph after multiple headings.
