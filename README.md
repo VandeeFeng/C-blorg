@@ -1,22 +1,30 @@
-# Org-Mode Static Site Generator (C Implementation)
+# Org-Mode Static Site Generator (C + Rust)
 
-A custom static site generator in C that parses org-mode documents and renders HTML, replicating the current blog design.
+A custom static site generator using C and Rust that parses org-mode documents and renders HTML, replicating the current blog design.
 
 ## Project Structure
 
 ```
-orgblog/
-├── build.c          # Build script using nob.h
-├── nob.h            # Header-only build system
-├── src/
-│   ├── string.h/c   # Custom SDS-style dynamic string
-│   ├── tokenizer.h/c # Org-mode tokenizer
-│   ├── parser.h/c   # AST parser
-│   ├── render.h/c   # HTML renderer
-│   └── main.c       # Entry point
-├── templates/       # HTML templates
-├── test/
-    └── test_string.c # String utilities tests
+C-blorg--rust/
+ ├── nob.c                # Build script using nob.h
+ ├── nob.h                # Header-only build system
+ ├── src/
+ │   ├── org-string.h/c   # Custom SDS-style dynamic string
+ │   ├── template.h/c     # HTML template system with variable substitution
+ │   ├── site-builder.h/c # Site building logic and file processing
+ │   ├── main.c           # Entry point
+ ├── include/
+ │   └── org-ffi.h       # Generated Rust FFI header
+ ├── ffi/
+ │   ├── Cargo.toml        # Rust package definition with orgize dependency
+ │   └── src/lib.rs       # FFI wrapper around orgize library
+ ├── templates/            # HTML templates
+ ├── test/
+ │   ├── test_string.c     # String utilities tests
+ │   ├── test_template.c   # Template system tests
+ │   ├── test_ffi.c       # Rust FFI tests
+ │   └── test_issues.org   # Test org-mode files
+ └── Cargo.lock           # Rust dependency lock file
 ```
 
 ## Building
@@ -66,10 +74,29 @@ Examples:
 
 ## Architecture
 
-- **Tokenizer**: Reads org-mode files and produces tokens
-- **Parser**: Builds AST from tokens
-- **Renderer**: Generates HTML from AST
-- **String Builder**: Custom SDS-style dynamic strings with exponential growth
+The project uses a hybrid C + Rust architecture:
+
+- **Rust FFI Layer** (`ffi/src/lib.rs`):
+  - Wraps the [orgize](https://github.com/PoiScript/orgize) library
+  - Exposes C-compatible functions via `extern "C"`
+  - Handles org-mode parsing and HTML generation
+  - Extracts metadata (title, date, tags, description)
+
+- **C Site Builder** (`src/site-builder.c`):
+  - Orchestrates the build process
+  - Processes org-mode files recursively
+  - Extracts metadata and HTML from Rust FFI
+  - Renders HTML using templates
+  - Generates index, archive, and tag pages
+
+- **Template System** (`src/template.c`):
+  - Simple variable substitution `{{variable}}`
+  - Partial inclusion `{{include filename}}`
+  - Reusable header, footer, head components
+
+- **String Utilities** (`src/org-string.c`):
+  - Custom SDS-style dynamic strings with exponential growth
+  - Memory-efficient string operations
 
 ## Features Supported
 
@@ -84,5 +111,8 @@ Examples:
 - HTML template rendering
 
 ## Resources
-- nob.h: https://github.com/tsoding/nob.h
-- SDS (Redis strings): https://github.com/antirez/sds
+
+- **nob.h**: https://github.com/tsoding/nob.h (Header-only C build system)
+- **orgize**: https://github.com/PoiScript/orgize (Rust org-mode parser library)
+- **SDS (Redis strings)**: https://github.com/antirez/sds (String implementation reference)
+

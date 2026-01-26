@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
     char *input_dir = "content";
     char *output_dir = "output";
-    char *template_dir = "../templates";
+    char *template_dir = "templates";
     char *site_title = "My Blog";
 
     int opt;

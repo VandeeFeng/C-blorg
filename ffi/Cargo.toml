@@ -1,0 +1,11 @@
+[package]
+name = "org_ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "org_ffi"
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+orgize = { git = "https://github.com/PoiScript/orgize" }

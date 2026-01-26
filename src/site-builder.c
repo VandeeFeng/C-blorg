@@ -6,9 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "site-builder.h"
-#include "tokenizer.h"
-#include "parser.h"
-#include "render.h"
+#include "org-ffi.h"
 #include "template.h"
 
 int mkdir_p(const char *path) {
@@ -99,18 +97,6 @@ static char *format_date(const char *raw_date) {
     return strdup(raw_date);
 }
 
-static void extract_metadata(Node *doc, const char *key, char **output) {
-    if (!doc || !key || !output) return;
-
-    for (int i = 0; i < doc->child_count; i++) {
-        Node *meta = doc->children[i];
-        if (meta->type == NODE_METADATA && meta->key && strcmp(meta->key, key) == 0 && meta->value) {
-            *output = string_to_cstr(meta->value);
-            return;
-        }
-    }
-}
-
 static int add_post_to_builder(SiteBuilder *builder, const char *date, const char *title, const char *tags, const char *filename) {
     if (builder->post_count >= builder->post_capacity) {
         int new_cap = builder->post_capacity == 0 ? INITIAL_POST_CAPACITY : builder->post_capacity * 2;
@@ -172,51 +158,56 @@ static int render_and_write_page(Template *tpl, String *content, const char *out
 }
 
 int process_org_file(SiteBuilder *builder, const char *input_path, const char *output_path) {
-    Tokenizer *t = tokenizer_create(input_path);
-    if (!t) {
-        fprintf(stderr, "ERROR: Failed to create tokenizer for %s\n", input_path);
+    FILE *f = fopen(input_path, "r");
+    if (!f) {
+        fprintf(stderr, "ERROR: Failed to open %s\n", input_path);
         return 1;
     }
 
-    Parser *p = parser_create(t);
-    if (!p) {
-        fprintf(stderr, "ERROR: Failed to create parser for %s\n", input_path);
-        tokenizer_free(t);
+    fseek(f, 0, SEEK_END);
+    long file_size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    char *content = malloc(file_size + 1);
+    if (!content) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for %s\n", input_path);
+        fclose(f);
         return 1;
     }
 
-    Node *doc = parser_parse(p);
-    if (!doc) {
+    size_t bytes_read = fread(content, 1, file_size, f);
+    content[bytes_read] = '\0';
+    fclose(f);
+
+    char *html = org_parse_to_html(content, strlen(content));
+    if (!html) {
         fprintf(stderr, "ERROR: Failed to parse %s\n", input_path);
-        parser_free(p);
-        tokenizer_free(t);
+        free(content);
         return 1;
     }
 
-    String *content = string_create(DEFAULT_STRING_BUFFER_SIZE);
-    render_document_content(doc, content);
-
-    char *title = NULL;
-    char *description = NULL;
-    char *date = NULL;
-    char *tags = NULL;
-
-    extract_metadata(doc, "title", &title);
-    extract_metadata(doc, "description", &description);
-    extract_metadata(doc, "filetags", &tags);
-
-    char *raw_date = NULL;
-    extract_metadata(doc, "date", &raw_date);
-
-    if (raw_date) {
-        date = format_date(raw_date);
-        free(raw_date);
+    OrgMetadata *meta = org_extract_metadata(content, strlen(content));
+    if (!meta) {
+        fprintf(stderr, "ERROR: Failed to extract metadata from %s\n", input_path);
+        org_free_string(html);
+        free(content);
+        return 1;
     }
 
-    if (!title) title = strdup("Untitled");
-    if (!description) description = strdup("");
-    if (!date) date = strdup("");
-    if (!tags) tags = strdup("");
+    const char *title = org_meta_get_title(meta);
+    const char *description = org_meta_get_description(meta);
+    const char *raw_date = org_meta_get_date(meta);
+    const char *tags = org_meta_get_tags(meta);
+
+    char *formatted_date = NULL;
+    if (raw_date) {
+        formatted_date = format_date(raw_date);
+    }
+
+    if (!title) title = "Untitled";
+    if (!description) description = "";
+    if (!formatted_date) formatted_date = "";
+    if (!tags) tags = "";
 
     char *filename = get_filename_without_ext(output_path);
     char *filename_only = strrchr(filename, '/');
@@ -229,47 +220,39 @@ int process_org_file(SiteBuilder *builder, const char *input_path, const char *o
     Template *tpl = load_base_template(builder);
     if (!tpl) {
         fprintf(stderr, "ERROR: Failed to load template for %s\n", input_path);
-        free(title);
-        free(description);
-        free(date);
-        free(tags);
         free(filename);
-        string_free(content);
-        node_free(doc);
-        parser_free(p);
-        tokenizer_free(t);
+        free(formatted_date);
+        free(content);
+        org_free_metadata(meta);
+        org_free_string(html);
         return 1;
     }
 
-    set_template_common_vars(tpl, builder, title, description, date, tags, filename_only);
+    set_template_common_vars(tpl, builder, title, description, formatted_date, tags, filename_only);
 
-    if (add_post_to_builder(builder, date, title, tags, filename_only) != 0) {
+    if (add_post_to_builder(builder, formatted_date, title, tags, filename_only) != 0) {
         fprintf(stderr, "ERROR: Failed to add post to builder\n");
-        free(title);
-        free(description);
-        free(date);
-        free(tags);
         free(filename);
-        string_free(content);
-        node_free(doc);
-        parser_free(p);
-        tokenizer_free(t);
+        free(formatted_date);
+        free(content);
+        org_free_metadata(meta);
+        org_free_string(html);
         template_free(tpl);
         return 1;
     }
 
-    render_and_write_page(tpl, content, output_path, output_path);
+    String *content_str = string_create(DEFAULT_STRING_BUFFER_SIZE);
+    string_append_cstr(content_str, html);
 
-    free(title);
-    free(description);
-    free(date);
-    free(tags);
+    render_and_write_page(tpl, content_str, output_path, output_path);
+
     free(filename);
+    free(formatted_date);
+    free(content);
+    org_free_metadata(meta);
+    org_free_string(html);
     template_free(tpl);
-    string_free(content);
-    node_free(doc);
-    parser_free(p);
-    tokenizer_free(t);
+    string_free(content_str);
 
     return 0;
 }

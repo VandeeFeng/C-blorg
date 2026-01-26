@@ -4,7 +4,7 @@
 
 * First Heading
 
-This is the first paragraph.
+This is first paragraph.
 
 [[https://example.com][This is a test link]]
 
@@ -17,10 +17,35 @@ Here's a paragraph with [[https://www.vandee.art][a link]] embedded in text.
 Another paragraph.
 
 * Bug Fix Test: Heading followed by text without blank line
-This should be a separate paragraph, not part of the heading.
+This should be a separate paragraph, not part of heading.
 
 * Bug Fix Test: Multiple consecutive headings
 ** Level 2 heading
 *** Level 3 heading
 
 This should be a paragraph after multiple headings.
+
+* Metadata Test: Multiple metadata keys
+#+description: This is a test description
+#+author: Test Author
+#+options: toc:nil
+
+Paragraph with metadata.
+
+* Complex Structure Test
+** Subheading 1
+- List item 1
+- List item 2
+
+** Subheading 2
+#+begin_src rust
+fn test() {
+    println!("Hello");
+}
+#+end_src
+
+* Link Variations Test
+Regular text with [[https://example.com][link]] inline.
+Image link: [[file:image.jpg]]
+URL only: [[https://example.com]]
+
