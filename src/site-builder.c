@@ -97,7 +97,7 @@ static char *format_date(const char *raw_date) {
     return strdup(raw_date);
 }
 
-static int add_post_to_builder(SiteBuilder *builder, const char *date, const char *title, const char *tags, const char *filename) {
+static int add_post_to_builder(SiteBuilder *builder, const char *raw_date, const char *date, const char *title, const char *tags, const char *filename) {
     if (builder->post_count >= builder->post_capacity) {
         int new_cap = builder->post_capacity == 0 ? INITIAL_POST_CAPACITY : builder->post_capacity * 2;
         PostInfo *new_posts = realloc(builder->posts, new_cap * sizeof(PostInfo));
@@ -107,6 +107,7 @@ static int add_post_to_builder(SiteBuilder *builder, const char *date, const cha
         builder->post_capacity = new_cap;
     }
 
+    builder->posts[builder->post_count].raw_date = strdup(raw_date);
     builder->posts[builder->post_count].date = strdup(date);
     builder->posts[builder->post_count].title = strdup(title);
     builder->posts[builder->post_count].tags = strdup(tags);
@@ -164,7 +165,7 @@ static String *generate_tags_html(const char *tags) {
     char *tags_str = strdup(tags);
     char *token = strtok(tags_str, " ");
     while (token != NULL) {
-        string_append_cstr(tags_html, "<a href=\"tag/");
+        string_append_cstr(tags_html, "<a href=\"tags/");
         string_append_cstr(tags_html, token);
         string_append_cstr(tags_html, ".html\">");
         string_append_cstr(tags_html, token);
@@ -298,7 +299,7 @@ int process_org_file(SiteBuilder *builder, const char *input_path, const char *o
         return 1;
     }
 
-    if (add_post_to_builder(builder, r.formatted_date, title, tags, filename_only) != 0) {
+    if (add_post_to_builder(builder, raw_date ? raw_date : "", r.formatted_date, title, tags, filename_only) != 0) {
         fprintf(stderr, "ERROR: Failed to add post to builder\n");
         free_org_file_resources(&r, 0);
         return 1;
@@ -366,14 +367,45 @@ int process_directory(SiteBuilder *builder, const char *input_dir, const char *o
 }
 
 static void append_post_link(String *content, PostInfo *post) {
-    string_append_cstr(content, "<div class=\"post-date\">");
-    string_append_cstr(content, post->date);
-    string_append_cstr(content, "</div><h2 class=\"post-title\"><a href=\"");
+    string_append_cstr(content, "<h2 class=\"post-title\"><a href=\"");
     string_append_cstr(content, BLOG_BASE_URL);
     string_append_cstr(content, post->filename);
     string_append_cstr(content, ".html\">");
     string_append_cstr(content, post->title);
-    string_append_cstr(content, "</a></h2>");
+    string_append_cstr(content, "</a></h2><div class=\"post-date\">");
+    string_append_cstr(content, post->date);
+    string_append_cstr(content, "</div><div class=\"taglist\"><a href=\"");
+    string_append_cstr(content, BLOG_BASE_URL);
+    string_append_cstr(content, "tags.html\">Tags</a>: ");
+
+    if (strlen(post->tags) > 0) {
+        char *tags_str = strdup(post->tags);
+        char *token = strtok(tags_str, " ");
+        while (token != NULL) {
+            string_append_cstr(content, "<a href=\"");
+            string_append_cstr(content, BLOG_BASE_URL);
+            string_append_cstr(content, "tags/");
+            string_append_cstr(content, token);
+            string_append_cstr(content, ".html\">");
+            string_append_cstr(content, token);
+            string_append_cstr(content, "</a> ");
+            token = strtok(NULL, " ");
+        }
+        free(tags_str);
+    }
+
+    string_append_cstr(content, "</div>");
+}
+
+static int compare_posts(const void *a, const void *b) {
+    const PostInfo *post_a = (const PostInfo *)a;
+    const PostInfo *post_b = (const PostInfo *)b;
+    return strcmp(post_b->raw_date, post_a->raw_date);
+}
+
+static void sort_posts(SiteBuilder *builder) {
+    if (builder->post_count < 2) return;
+    qsort(builder->posts, builder->post_count, sizeof(PostInfo), compare_posts);
 }
 
 static int generate_page_with_posts(SiteBuilder *builder, String *content, const char *title, const char *description, const char *filename, PostInfo *posts, int post_count) {
@@ -406,6 +438,8 @@ int generate_index_page(SiteBuilder *builder) {
         return 0;
     }
 
+    sort_posts(builder);
+
     String *content = string_create(DEFAULT_STRING_BUFFER_SIZE);
     int recent_count = builder->post_count > 5 ? 5 : builder->post_count;
     for (int i = 0; i < recent_count; i++) {
@@ -423,6 +457,7 @@ int generate_index_page(SiteBuilder *builder) {
     }
 
     set_template_common_vars(tpl, builder, builder->site_title, "Vandee's personal blog", "", "", "index.html");
+    set_page_content(tpl, content);
 
     char *output_path = join_path(builder->output_dir, "index.html");
     String *output = string_create(OUTPUT_BUFFER_SIZE);
@@ -442,6 +477,8 @@ int generate_archive_page(SiteBuilder *builder) {
         printf("No posts to generate archive page\n");
         return 0;
     }
+
+    sort_posts(builder);
 
     String *content = string_create(builder->post_count * 200);
     return generate_page_with_posts(builder, content, "Archive", "Archive of all blog posts", "archive.html", builder->posts, builder->post_count);
@@ -515,6 +552,10 @@ static TagGroup *group_posts_by_tags(SiteBuilder *builder, int *tag_count_out) {
         process_post_tags(&builder->posts[i], &tags, &tag_count, &tag_capacity);
     }
 
+    for (int i = 0; i < tag_count; i++) {
+        qsort(tags[i].posts, tags[i].count, sizeof(PostInfo), compare_posts);
+    }
+
     *tag_count_out = tag_count;
     return tags;
 }
@@ -555,6 +596,8 @@ int generate_tags_page(SiteBuilder *builder) {
         printf("No posts to generate tags page\n");
         return 0;
     }
+
+    sort_posts(builder);
 
     int tag_count;
     String *content = generate_all_tags_content(builder, &tag_count);
@@ -614,10 +657,12 @@ int generate_individual_tag_pages(SiteBuilder *builder) {
         return 0;
     }
 
+    sort_posts(builder);
+
     int tag_count;
     TagGroup *tags = group_posts_by_tags(builder, &tag_count);
 
-    char *tag_dir = join_path(builder->output_dir, "tag");
+    char *tag_dir = join_path(builder->output_dir, "tags");
     mkdir_p(tag_dir);
 
     for (int i = 0; i < tag_count; i++) {

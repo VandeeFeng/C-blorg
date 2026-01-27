@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /**
-   * Fetches and trims all posts from the post-list.json file.
+   * Fetches and trims all posts from the archive.html file.
    * @returns {Promise<Array>} An array of posts, each with the following properties:
    *   - url: the URL of the post
    *   - title: the title of the post
@@ -204,20 +204,24 @@ document.addEventListener("DOMContentLoaded", function () {
    */
   async function fetchAllPosts() {
     try {
-      // Fetch a list of all blog posts urls
-      const response = await fetch("assets/post-list.json");
-      // for local testing
-      // const response = await fetch(
-      // "https://chenyo-17.github.io/org-static-blog/assets/post-list.json",
-      // );
-      const postUrls = await response.json();
+      // Fetch archive.html to get all post links
+      const response = await fetch("archive.html");
+      const archiveHtml = await response.text();
+      const parser = new DOMParser();
+      const archiveDoc = parser.parseFromString(archiveHtml, "text/html");
+
+      // Extract all post links from archive
+      const postLinks = Array.from(archiveDoc.querySelectorAll(".post-title a"));
 
       // Fetch content for each blog post
       const posts = await Promise.all(
-        postUrls.map(async (url) => {
-          const postResponse = await fetch(url);
+        postLinks.map(async (link) => {
+          let url = link.href;
+          // Convert absolute URLs to relative paths for local access
+          const localUrl = url.replace(/^https?:\/\/[^\/]+\/blog\//, "");
+
+          const postResponse = await fetch(localUrl);
           const postHtml = await postResponse.text();
-          const parser = new DOMParser();
           const postDoc = parser.parseFromString(postHtml, "text/html");
           const content = postDoc.getElementById("content");
 
@@ -261,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
 
           return {
-            url: url,
+            url: localUrl,
             title: title,
             content: cleanContent,
             headers: headers,

@@ -19,6 +19,7 @@
 #define BLOG_BASE_URL "https://www.vandee.art/blog/"
 
 typedef struct {
+    char *raw_date;
     char *date;
     char *title;
     char *tags;
