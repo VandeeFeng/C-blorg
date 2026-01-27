@@ -141,6 +141,7 @@ void render_paragraph(Node *paragraph, String *output) {
 void render_code_block(Node *code, String *output) {
     if (!code || !output) return;
 
+    string_append_cstr(output, "<div class=\"org-src-container\">\n");
     string_append_cstr(output, "<pre><code");
 
     if (code->language) {
@@ -152,6 +153,7 @@ void render_code_block(Node *code, String *output) {
     string_append_cstr(output, ">");
     render_value_escaped(code, output);
     string_append_cstr(output, "</code></pre>\n");
+    string_append_cstr(output, "</div>\n");
 }
 
 void render_blockquote(Node *quote, String *output) {
