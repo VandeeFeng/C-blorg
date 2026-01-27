@@ -14,7 +14,8 @@ int main(int argc, char **argv) {
     char *input_dir = "posts";
     char *output_dir = "blog";
     char *template_dir = "templates";
-    char *site_title = "My Blog";
+    char *site_title = "Vandee's Blog";
+    char *blog_base_url = "https://www.vandee.art/blog/";
 
     int opt;
     while ((opt = getopt(argc, argv, "o:c:t:")) != -1) {
@@ -33,19 +34,23 @@ int main(int argc, char **argv) {
         .output_dir = output_dir,
         .template_dir = template_dir,
         .site_title = site_title,
+        .blog_base_url = blog_base_url,
         .content = NULL,
         .posts = NULL,
         .post_count = 0,
-        .post_capacity = 0
+        .post_capacity = 0,
+        .max_rss_items = 30
     };
 
     printf("Input directory:  %s\n", builder.input_dir);
     printf("Output directory: %s\n", builder.output_dir);
     printf("Template directory: %s\n", builder.template_dir);
     printf("Site title: %s\n", builder.site_title);
+    printf("Blog base URL: %s\n", builder.blog_base_url);
 
     mkdir_p(builder.output_dir);
 
+    printf("\nGenerating blog posts pages...\n");
     int errors = process_directory(&builder, builder.input_dir, builder.output_dir);
 
     if (errors > 0) {
@@ -58,6 +63,7 @@ int main(int argc, char **argv) {
     generate_tags_page(&builder);
     generate_individual_tag_pages(&builder);
     generate_archive_page(&builder);
+    generate_rss_feed(&builder);
 
     printf("\nCopying template assets...\n");
     int copy_errors = copy_template_assets(&builder);

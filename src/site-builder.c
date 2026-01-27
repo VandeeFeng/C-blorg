@@ -72,6 +72,7 @@ void set_template_common_vars(Template *tpl, SiteBuilder *builder, const char *t
     template_set_var(tpl, "title", title);
     template_set_var(tpl, "description", description);
     template_set_var(tpl, "site_title", builder->site_title);
+    template_set_var(tpl, "blog_base_url", builder->blog_base_url);
     template_set_var(tpl, "date", date);
     template_set_var(tpl, "tags", tags);
     template_set_var(tpl, "filename", filename);
@@ -366,16 +367,16 @@ int process_directory(SiteBuilder *builder, const char *input_dir, const char *o
     return error_count;
 }
 
-static void append_post_link(String *content, PostInfo *post) {
+static void append_post_link(String *content, PostInfo *post, const char *blog_base_url) {
     string_append_cstr(content, "<h2 class=\"post-title\"><a href=\"");
-    string_append_cstr(content, BLOG_BASE_URL);
+    string_append_cstr(content, blog_base_url);
     string_append_cstr(content, post->filename);
     string_append_cstr(content, ".html\">");
     string_append_cstr(content, post->title);
     string_append_cstr(content, "</a></h2><div class=\"post-date\">");
     string_append_cstr(content, post->date);
     string_append_cstr(content, "</div><div class=\"taglist\"><a href=\"");
-    string_append_cstr(content, BLOG_BASE_URL);
+    string_append_cstr(content, blog_base_url);
     string_append_cstr(content, "tags.html\">Tags</a>: ");
 
     if (strlen(post->tags) > 0) {
@@ -383,7 +384,7 @@ static void append_post_link(String *content, PostInfo *post) {
         char *token = strtok(tags_str, " ");
         while (token != NULL) {
             string_append_cstr(content, "<a href=\"");
-            string_append_cstr(content, BLOG_BASE_URL);
+            string_append_cstr(content, blog_base_url);
             string_append_cstr(content, "tags/");
             string_append_cstr(content, token);
             string_append_cstr(content, ".html\">");
@@ -410,7 +411,7 @@ static void sort_posts(SiteBuilder *builder) {
 
 static int generate_page_with_posts(SiteBuilder *builder, String *content, const char *title, const char *description, const char *filename, PostInfo *posts, int post_count) {
     for (int i = 0; i < post_count; i++) {
-        append_post_link(content, &posts[i]);
+        append_post_link(content, &posts[i], builder->blog_base_url);
     }
 
     Template *tpl = load_base_template(builder);
@@ -443,7 +444,7 @@ int generate_index_page(SiteBuilder *builder) {
     String *content = string_create(DEFAULT_STRING_BUFFER_SIZE);
     int recent_count = builder->post_count > 5 ? 5 : builder->post_count;
     for (int i = 0; i < recent_count; i++) {
-        append_post_link(content, &builder->posts[i]);
+        append_post_link(content, &builder->posts[i], builder->blog_base_url);
     }
 
     char *template_path = join_path(builder->template_dir, "index.html");
@@ -456,7 +457,7 @@ int generate_index_page(SiteBuilder *builder) {
         return 1;
     }
 
-    set_template_common_vars(tpl, builder, builder->site_title, "Vandee's personal blog", "", "", "index.html");
+    set_template_common_vars(tpl, builder, builder->site_title, "Vandee's Blog", "", "", "index.html");
     set_page_content(tpl, content);
 
     char *output_path = join_path(builder->output_dir, "index.html");
@@ -568,12 +569,12 @@ static void free_tag_groups(TagGroup *tags, int tag_count) {
     free(tags);
 }
 
-static void append_tag_group_content(String *content, TagGroup *tag) {
+static void append_tag_group_content(String *content, TagGroup *tag, const char *blog_base_url) {
     string_append_cstr(content, "<h1 class=\"tags-title\">Posts tagged \"");
     string_append_cstr(content, tag->name);
     string_append_cstr(content, "\":</h1>\n");
     for (int j = 0; j < tag->count; j++) {
-        append_post_link(content, &tag->posts[j]);
+        append_post_link(content, &tag->posts[j], blog_base_url);
     }
 }
 
@@ -583,7 +584,7 @@ static String *generate_all_tags_content(SiteBuilder *builder, int *tag_count_ou
     TagGroup *tags = group_posts_by_tags(builder, &tag_count);
 
     for (int i = 0; i < tag_count; i++) {
-        append_tag_group_content(content, &tags[i]);
+        append_tag_group_content(content, &tags[i], builder->blog_base_url);
     }
 
     *tag_count_out = tag_count;
@@ -623,7 +624,7 @@ int generate_tags_page(SiteBuilder *builder) {
 
 static void generate_single_tag_page(SiteBuilder *builder, TagGroup *tag, const char *tag_dir) {
     String *content = string_create(DEFAULT_STRING_BUFFER_SIZE);
-    append_tag_group_content(content, tag);
+    append_tag_group_content(content, tag, builder->blog_base_url);
 
     Template *tpl = load_base_template(builder);
     if (!tpl) {

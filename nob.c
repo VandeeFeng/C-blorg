@@ -21,6 +21,7 @@ static const char *core_sources[] = {
     "src/org-string.c",
     "src/template.c",
     "src/site-builder.c",
+    "src/rss.c",
     "src/main.c",
 };
 

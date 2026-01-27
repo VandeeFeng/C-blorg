@@ -15,9 +15,6 @@
 #define DATE_BUFFER_SIZE 32
 #define PAGE_TITLE_BUFFER_SIZE 128
 
-/* Blog URL constant */
-#define BLOG_BASE_URL "https://www.vandee.art/blog/"
-
 typedef struct {
     char *raw_date;
     char *date;
@@ -31,10 +28,12 @@ typedef struct {
     char *output_dir;
     char *template_dir;
     char *site_title;
+    char *blog_base_url;
     String *content;
     PostInfo *posts;
     int post_count;
     int post_capacity;
+    int max_rss_items;
 } SiteBuilder;
 
 int mkdir_p(const char *path);
@@ -46,6 +45,7 @@ int generate_index_page(SiteBuilder *builder);
 int generate_tags_page(SiteBuilder *builder);
 int generate_individual_tag_pages(SiteBuilder *builder);
 int generate_archive_page(SiteBuilder *builder);
+int generate_rss_feed(SiteBuilder *builder);
 int copy_template_assets(SiteBuilder *builder);
 
 #endif
