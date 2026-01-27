@@ -13,6 +13,7 @@ struct HtmlExportWithUrls {
     in_descriptive_list: Vec<bool>,
     pending_attributes: Option<HashMap<String, String>>,
     paragraph_start_len: Vec<usize>,
+    in_verbatim_or_code: bool,
 }
 
 impl HtmlExportWithUrls {
@@ -22,6 +23,7 @@ impl HtmlExportWithUrls {
             in_descriptive_list: Vec::new(),
             pending_attributes: None,
             paragraph_start_len: Vec::new(),
+            in_verbatim_or_code: false,
         }
     }
 
@@ -55,6 +57,10 @@ impl HtmlExportWithUrls {
         } else {
             self.pending_attributes = Some(parsed);
         }
+    }
+
+    fn escape_text_only(&mut self, text: &str) {
+        let _ = write!(&mut self.output, "{}", HtmlEscape(text));
     }
 
     fn process_text_with_urls(&mut self, text: &str) {
@@ -306,11 +312,23 @@ impl Traverser for HtmlExportWithUrls {
             Event::Enter(Container::Underline(_)) => self.output += "<u>",
             Event::Leave(Container::Underline(_)) => self.output += "</u>",
 
-            Event::Enter(Container::Verbatim(_)) => self.output += "<code>",
-            Event::Leave(Container::Verbatim(_)) => self.output += "</code>",
+            Event::Enter(Container::Verbatim(_)) => {
+                self.in_verbatim_or_code = true;
+                self.output += "<code>";
+            }
+            Event::Leave(Container::Verbatim(_)) => {
+                self.in_verbatim_or_code = false;
+                self.output += "</code>";
+            }
 
-            Event::Enter(Container::Code(_)) => self.output += "<code>",
-            Event::Leave(Container::Code(_)) => self.output += "</code>",
+            Event::Enter(Container::Code(_)) => {
+                self.in_verbatim_or_code = true;
+                self.output += "<code>";
+            }
+            Event::Leave(Container::Code(_)) => {
+                self.in_verbatim_or_code = false;
+                self.output += "</code>";
+            }
 
             Event::Enter(Container::SourceBlock(block)) => {
                 self.output += r#"<div class="org-src-container">"#;
@@ -427,7 +445,11 @@ impl Traverser for HtmlExportWithUrls {
             Event::Leave(Container::Link(_)) => self.output += "</a>",
 
             Event::Text(text) => {
-                self.process_text_with_urls(&text);
+                if self.in_verbatim_or_code {
+                    self.escape_text_only(&text);
+                } else {
+                    self.process_text_with_urls(&text);
+                }
             }
 
             Event::LineBreak(_) => self.output += "<br/>",

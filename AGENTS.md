@@ -4,7 +4,11 @@
 Custom org-mode static site generator in C with a Rust FFI parser/exporter.
 
 ## Entry Points
-- `nob.c` - Build script using nob.h
+- `nob.c` - Build script using nob.h. Run `./nob [command]`:
+  - (no args) - Build project to `build/org-blog`
+  - `clean` - Remove build/ and ffi/target/ directories
+  - `test` - Build and run all test suites
+  - `blog` - Build and run org-blog with args
 - `src/main.c` - CLI entry and build orchestration
 - `src/site-builder.c` - Directory processing and HTML generation
 - `ffi/src/lib.rs` - Rust orgize wrapper and C ABI exports

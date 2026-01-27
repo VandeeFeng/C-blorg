@@ -88,4 +88,15 @@ URL with path: https://example.com/path/to/page
 
  Multiple balanced parens: https://example.com/(nested)/(path).html
 
- Unmatched closing paren stops URL: http://example.com/test).html should stop at the paren
+  Unmatched closing paren stops URL: http://example.com/test).html should stop at the paren
+
+* Verbatim URL Test
+
+URL in verbatim: ~https://example.com~
+
+URL in code: =https://example.com=
+
+Plain URL should still be link: https://example.com
+
+Mixed in paragraph: visit ~https://example.com~ and check https://example.org for more info.
+

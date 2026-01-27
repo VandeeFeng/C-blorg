@@ -302,6 +302,39 @@ void test_url_balanced_parentheses(void) {
     printf("  OK\n");
 }
 
+void test_verbatim_url_no_link(void) {
+    printf("  test_verbatim_url_no_link...");
+
+    char *input = "* Verbatim URL Test\n\n"
+        "URL in verbatim: ~https://example.com~\n"
+        "URL in code: =https://example.com=\n"
+        "Plain URL should still be link: https://example.com";
+
+    char *html = org_parse_to_html(input, strlen(input));
+
+    assert(html != NULL);
+
+    const char *code_start = strstr(html, "<code>https://example.com</code>");
+    assert(code_start != NULL);
+
+    const char *code_end = strstr(code_start, "</code>");
+    assert(code_end != NULL);
+
+    size_t code_section_len = code_end - code_start + 7;
+    char *code_section = malloc(code_section_len + 1);
+    strncpy(code_section, code_start, code_section_len);
+    code_section[code_section_len] = '\0';
+
+    assert(strstr(code_section, "<a href") == NULL);
+
+    free(code_section);
+
+    assert(strstr(html, "href=\"https://example.com\"") != NULL);
+
+    org_free_string(html);
+    printf("  OK\n");
+}
+
 int main(void) {
     printf("Running Rust FFI Tests\n");
     printf("======================\n\n");
@@ -319,6 +352,7 @@ int main(void) {
     test_body_extraction();
     test_url_punctuation();
     test_url_balanced_parentheses();
+    test_verbatim_url_no_link();
 
     printf("\nAll tests passed!\n");
     return 0;
