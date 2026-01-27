@@ -174,12 +174,12 @@ void test_complex_document(void) {
     printf("  test_complex_document...");
 
     char *input = "#+title: Complex Test\n#+filetags: rust ffi\n\n"
-                 "* First Heading\n\nText here.\n\n"
-                 "** Sub Heading\n\nMore text.\n\n"
-                 "- List item 1\n- List item 2\n\n"
-                 "#+begin_src rust\n"
-                 "fn main() {}\n"
-                 "#+end_src";
+        "* First Heading\n\nText here.\n\n"
+        "** Sub Heading\n\nMore text.\n\n"
+        "- List item 1\n- List item 2\n\n"
+        "#+begin_src rust\n"
+        "fn main() {}\n"
+        "#+end_src";
 
     char *html = org_parse_to_html(input, strlen(input));
     assert(html != NULL);
@@ -221,6 +221,76 @@ void test_body_extraction(void) {
     printf("  OK\n");
 }
 
+void test_url_punctuation(void) {
+    printf("  test_url_punctuation...");
+
+    char *input = "* URL Punctuation Test\n\n"
+        "English punctuation: https://example.com. https://example.org, https://example.net!\n"
+        "Chinese punctuation: https://example.com。 https://example.org， https://example.net！\n"
+        "Parentheses: (https://example.com) （https://example.org）\n"
+        "Mixed: https://example.com，测试文本.";
+
+    char *html = org_parse_to_html(input, strlen(input));
+
+    assert(html != NULL);
+
+    assert(strstr(html, "href=\"https://example.com\"") != NULL);
+    assert(strstr(html, "href=\"https://example.org\"") != NULL);
+    assert(strstr(html, "href=\"https://example.net\"") != NULL);
+
+    assert(strstr(html, ">https://example.com</a>.") != NULL);
+    assert(strstr(html, ">https://example.org</a>,") != NULL);
+    assert(strstr(html, ">https://example.net</a>!") != NULL);
+
+    assert(strstr(html, ">https://example.com</a>。") != NULL);
+    assert(strstr(html, ">https://example.org</a>，") != NULL);
+    assert(strstr(html, ">https://example.net</a>！") != NULL);
+
+    assert(strstr(html, "(<a href=\"https://example.com\">https://example.com</a>)") != NULL);
+    assert(strstr(html, "（<a href=\"https://example.org\">https://example.org</a>）") != NULL);
+
+    assert(strstr(html, ">https://example.com</a>，测试文本") != NULL);
+
+    org_free_string(html);
+    printf("  OK\n");
+}
+
+void test_url_balanced_parentheses(void) {
+    printf("  test_url_balanced_parentheses...");
+
+    char *input = "* URL Balanced Parentheses Test\n\n"
+        "URL with balanced parens: http://example.com/test(1).html\n"
+        "URL with nested balanced parens: http://example.com/path(foo(bar)).html\n"
+        "API method with parens: https://example.com/api/method(arg1,arg2).\n"
+        "MSDN versioned URL: http://msdn.microsoft.com/en-us/library/aa752574(VS.85).aspx\n"
+        "Multiple balanced parens: https://example.com/(nested)/(path).html\n"
+        "Unmatched closing paren: http://example.com/test).html should stop at )";
+
+    char *html = org_parse_to_html(input, strlen(input));
+
+    assert(html != NULL);
+
+    assert(strstr(html, "href=\"http://example.com/test(1).html\"") != NULL);
+    assert(strstr(html, ">http://example.com/test(1).html</a>") != NULL);
+
+    assert(strstr(html, "href=\"http://example.com/path(foo(bar)).html\"") != NULL);
+    assert(strstr(html, ">http://example.com/path(foo(bar)).html</a>") != NULL);
+
+    assert(strstr(html, "href=\"https://example.com/api/method(arg1,arg2)\"") != NULL);
+    assert(strstr(html, ">https://example.com/api/method(arg1,arg2)</a>.") != NULL);
+
+    assert(strstr(html, "href=\"http://msdn.microsoft.com/en-us/library/aa752574(VS.85).aspx\"") != NULL);
+    assert(strstr(html, ">http://msdn.microsoft.com/en-us/library/aa752574(VS.85).aspx</a>") != NULL);
+
+    assert(strstr(html, "href=\"https://example.com/(nested)/(path).html\"") != NULL);
+
+    assert(strstr(html, "href=\"http://example.com/test\"") != NULL);
+    assert(strstr(html, ">http://example.com/test</a>).html") != NULL);
+
+    org_free_string(html);
+    printf("  OK\n");
+}
+
 int main(void) {
     printf("Running Rust FFI Tests\n");
     printf("======================\n\n");
@@ -236,6 +306,8 @@ int main(void) {
     test_extract_metadata_empty();
     test_complex_document();
     test_body_extraction();
+    test_url_punctuation();
+    test_url_balanced_parentheses();
 
     printf("\nAll tests passed!\n");
     return 0;

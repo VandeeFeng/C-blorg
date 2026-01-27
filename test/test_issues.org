@@ -49,3 +49,43 @@ Regular text with [[https://example.com][link]] inline.
 Image link: [[file:image.jpg]]
 URL only: [[https://example.com]]
 
+ * Plain URL Test
+
+This is a paragraph with a plain URL: https://example.com
+
+Another URL http://example.org should also be converted.
+
+Multiple URLs in one paragraph: https://example.com, https://example.org.
+
+URL at end of sentence. https://example.com
+
+URL with path: https://example.com/path/to/page
+
+  * Punctuation Test
+ 
+ English punctuation: https://example.com. https://example.org, https://example.net! https://example.com? https://example.org; https://example.net:
+ 
+ Chinese punctuation: https://example.com。 https://example.org， https://example.net！ https://example.com？ https://example.org； https://example.net：
+ 
+ Parentheses test: (https://example.com) (https://example.org) (https://example.net)
+ 
+ Chinese parentheses test: （https://example.com）（https://example.org）（https://example.net）
+ 
+ Mixed punctuation: https://example.com，测试文本. https://example.org;测试文本! https://example.net：测试文本？
+ 
+  * Balanced Parentheses Test
+ 
+ URL with balanced parens: http://example.com/test(1).html
+ 
+ URL with nested balanced parens: http://example.com/path(foo(bar)).html
+ 
+ API method with parens: https://example.com/api/method(arg1,arg2).
+ 
+ MSDN versioned URL: http://msdn.microsoft.com/en-us/library/aa752574(VS.85).aspx
+ 
+ Multiple balanced parens: https://example.com/(nested)/(path).html
+ 
+ Unmatched closing paren stops URL: http://example.com/test).html should stop at the paren
+ 
+ 
+ 
