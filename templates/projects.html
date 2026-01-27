@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Projects | Vandee's Blog</title>
+  <meta property="og:title" content="Projects | Vandee's Blog">
+  <meta property="og:type" content="website" />
+  <meta name="author" content="Vandee">
+  <meta name="referrer" content="origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="assets/css/blog-style.css" type="text/css" />
+  <script src="assets/js/shiba.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <h1><a href="https://www.vandee.art/blog/">Vandee's Blog</a></h1>
+    <img class="shiba" width="100px" src="assets/shiba_gif/shiba_idle_8fps.gif">
+    <nav>
+      <a href="https://www.vandee.art/blog/">Home</a>
+      <a href="https://x404.xyz/wiki">Wiki</a>
+      <a href="https://x404.xyz/photo">Photo</a>
+      <a href="archive.html">Archive</a>
+      <a href="tags.html">Tags</a>
+    </nav>
+  </header>
+
+  <main id="content">
+    <div class="projects-container">
+      <div class="projects-wrapper">
+        <h2>Just for fun!</h2>
+        <div id="projects-grid" class="projects-grid">
+          <div class="loading">Loading projects...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <p>
+      © 2022-
+      <script>document.write(new Date().getFullYear())</script> Vandee. All rights reserved.
+    </p>
+    <div class="social-links"></div>
+  </footer>
+  <script>
+    const githubRepos = [
+      'https://github.com/VandeeFeng/gitmemos',
+      'https://github.com/VandeeFeng/bili-tui',
+      'https://github.com/VandeeFeng/smart-cmd',
+      'https://github.com/VandeeFeng/promptheus',
+      'https://github.com/VandeeFeng/GitNano',
+      'https://github.com/VandeeFeng/Emacs-Hoarder',
+      'https://github.com/VandeeFeng/org-hover',
+      'https://github.com/VandeeFeng/bookmark-summary',
+      'https://github.com/VandeeFeng/RSS-CLI',
+      'https://github.com/VandeeFeng/nash'
+    ];
+
+    function extractRepoInfo(repoUrl) {
+      const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/\?#]+)/);
+      if (match) {
+        return {owner: match[1], repo: match[2]};
+      }
+      return null;
+    }
+
+    function getGithubOgImage(owner, repo) {
+      return `https://opengraph.githubassets.com/1/${owner}/${repo}`;
+    }
+
+    // Cache configuration
+    const CACHE_KEY = 'github_repos_cache';
+    const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hour
+
+    // Function to get cached data
+    function getCachedData() {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const {data, timestamp} = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            console.log('Using cached repository data');
+            return data;
+          }
+        }
+      } catch (error) {
+        console.warn('Error reading cache:', error);
+      }
+      return null;
+    }
+
+    // Function to set cached data
+    function setCachedData(data) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+        console.log('Cached repository data');
+      } catch (error) {
+        console.warn('Error writing cache:', error);
+      }
+    }
+
+    // Function to fetch repository data from GitHub API with caching
+    async function fetchRepoData(repoUrl) {
+      const repoInfo = extractRepoInfo(repoUrl);
+      if (!repoInfo) return null;
+
+      try {
+        const response = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        return {
+          name: data.name,
+          description: data.description || 'No description, website, or topics provided.',
+          url: data.html_url,
+          language: data.language || 'Unknown',
+          stars: data.stargazers_count,
+          owner: repoInfo.owner,
+          repo: repoInfo.repo
+        };
+      } catch (error) {
+        console.error(`Error fetching ${repoUrl}:`, error);
+        return {
+          name: repoInfo.repo,
+          description: 'API rate limit exceeded. Please try again later.',
+          url: repoUrl,
+          language: 'Unknown',
+          stars: 0,
+          owner: repoInfo.owner,
+          repo: repoInfo.repo
+        };
+      }
+    }
+
+    // Function to render project cards
+    function renderProjects(projects) {
+      const grid = document.getElementById('projects-grid');
+
+      if (projects.length === 0) {
+        grid.innerHTML = '<div class="loading">No projects to display.</div>';
+        return;
+      }
+
+      grid.innerHTML = projects.map(project => `
+        <a href="${project.url}" class="project-link" target="_blank" rel="noopener">
+          <div class="project-card">
+            <img src="${getGithubOgImage(project.owner, project.repo)}"
+                 alt="${project.name}"
+                 class="project-thumbnail"
+                 loading="lazy">
+            <h3 class="project-title">${project.name}</h3>
+            <p class="project-description">${project.description}</p>
+            <div class="project-meta">
+              <span class="project-language">${project.language}</span>
+              <span class="project-stars">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+                </svg>
+                ${project.stars.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </a>
+        `).join('');
+    }
+
+    // Main function to fetch all repository data and render
+    async function loadProjects() {
+      const grid = document.getElementById('projects-grid');
+      grid.innerHTML = '<div class="loading">Loading projects...</div>';
+
+      // Try to use cached data first
+      const cachedProjects = getCachedData();
+      if (cachedProjects) {
+        renderProjects(cachedProjects);
+        return;
+      }
+
+      try {
+        // Process repositories in batches of 5 to avoid rate limiting
+        const projects = [];
+        for (let i = 0; i < githubRepos.length; i += 5) {
+          const batch = githubRepos.slice(i, i + 5);
+          const promises = batch.map(repoUrl => fetchRepoData(repoUrl));
+          const batchResults = await Promise.all(promises);
+          projects.push(...batchResults);
+
+          // Add delay between batches to avoid rate limiting
+          if (i + 5 < githubRepos.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+
+        const validProjects = projects.filter(project => project !== null);
+
+        // Cache the successful results
+        setCachedData(validProjects);
+
+        renderProjects(validProjects);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        grid.innerHTML = '<div class="loading">Failed to load projects. Please try again later.</div>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProjects);
+  </script>
+
+  <style>
+    .projects-container {
+      margin-top: -1rem;
+      margin-bottom: 3rem;
+    }
+
+    .projects-wrapper {
+      padding: 1rem 0 2rem 0;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      align-items: stretch;
+    }
+
+    .project-card {
+      background: #fdf6e3;
+      border: 0.5px solid #eee8d5;
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+      border-color: #d3d3d3;
+    }
+
+    .project-thumbnail {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      background: #eee8d5;
+    }
+
+    .project-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #073642;
+      margin: 0 0 0.5rem 0;
+      line-height: 1.3;
+    }
+
+    .project-description {
+      color: #586e75;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin: 0 0 1rem 0;
+      flex-grow: 1;
+    }
+
+    .project-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #657b83;
+    }
+
+    .project-language {
+      background: #eee8d5;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    .project-stars {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+      color: #586e75;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+      .projects-container {
+        margin-top: -0.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .projects-wrapper {
+        padding: 0.5rem 1rem 1.5rem 1rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .project-card {
+        padding: 1rem;
+      }
+
+      .projects-grid .project-thumbnail {
+        max-height: 250px;
+        object-fit: cover !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .projects-container {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+      }
+
+      .projects-wrapper {
+        padding: 0 0.8rem 1.5rem 0.8rem;
+      }
+
+      .projects-grid {
+        gap: 0.8rem;
+      }
+
+      .project-card {
+        padding: 0.8rem;
+      }
+
+      .projects-grid .project-thumbnail {
+        max-height: 200px;
+        object-fit: cover !important;
+        border-radius: 4px;
+      }
+
+      .project-title {
+        font-size: 1.1rem;
+      }
+
+      .project-description {
+        font-size: 0.85rem;
+      }
+
+      .project-meta {
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (orientation: portrait) and (max-width: 600px) {
+      .project-thumbnail {
+        max-height: 180px;
+        object-fit: contain;
+      }
+    }
+  </style>
+
+</body>
+
+</html>

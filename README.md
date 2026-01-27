@@ -9,22 +9,20 @@ C-blorg--rust/
  ├── nob.c                # Build script using nob.h
  ├── nob.h                # Header-only build system
  ├── src/
+ │   ├── main.c           # Entry point
  │   ├── org-string.h/c   # Custom SDS-style dynamic string
  │   ├── template.h/c     # HTML template system with variable substitution
  │   ├── site-builder.h/c # Site building logic and file processing
- │   ├── main.c           # Entry point
+ │   ├── tokenizer.h/c    # Org-mode tokenizer
+ │   ├── parser.h/c       # Org-mode parser (AST generation)
+ │   └── render.h/c       # HTML renderer from AST
  ├── include/
  │   └── org-ffi.h       # Generated Rust FFI header
  ├── ffi/
- │   ├── Cargo.toml        # Rust package definition with orgize dependency
+ │   ├── Cargo.toml
  │   └── src/lib.rs       # FFI wrapper around orgize library
  ├── templates/            # HTML templates
  ├── test/
- │   ├── test_string.c     # String utilities tests
- │   ├── test_template.c   # Template system tests
- │   ├── test_ffi.c       # Rust FFI tests
- │   └── test_issues.org   # Test org-mode files
- └── Cargo.lock           # Rust dependency lock file
 ```
 
 ## Building
@@ -42,40 +40,39 @@ cc nob.c -o nob
 # Run tests
 ./nob test
 
-# Run executable
-./nob run
+# Run blog builder
+./nob blog
 ```
 
 ## Usage
 
 ```bash
-./orgblog [-o output_dir] [-c content_dir] [-t template_dir]
+./nob blog [-o output_dir] [-c content_dir] [-t template_dir]
 ```
 
 Options:
-- `-o` - Output directory for generated HTML (default: `output`)
-- `-c` - Content directory containing org-mode files (default: `content`)
+- `-o` - Output directory for generated HTML (default: `blog`)
+- `-c` - Content directory containing org-mode files (default: `posts`)
 - `-t` - Directory containing HTML templates (default: `templates`)
 
 Examples:
 ```bash
 # Use all defaults
-./orgblog
+./nob blog
 
 # Custom output directory
-./orgblog -o public
+./nob blog -o public
 
 # Custom content and output directories
-./orgblog -c posts -o build
+./nob blog -c posts -o build
 
 # Full customization
-./orgblog -o public -c content -t templates
+./nob blog -o public -c content -t templates
 ```
 
 ## Architecture
 
 The project uses a hybrid C + Rust architecture:
-
 - **Rust FFI Layer** (`ffi/src/lib.rs`):
   - Wraps the [orgize](https://github.com/PoiScript/orgize) library
   - Exposes C-compatible functions via `extern "C"`
@@ -85,9 +82,10 @@ The project uses a hybrid C + Rust architecture:
 - **C Site Builder** (`src/site-builder.c`):
   - Orchestrates the build process
   - Processes org-mode files recursively
-  - Extracts metadata and HTML from Rust FFI
+  - Extracts metadata and HTML from parser/renderer
   - Renders HTML using templates
   - Generates index, archive, and tag pages
+  - Copies template assets (404, projects, static files)
 
 - **Template System** (`src/template.c`):
   - Simple variable substitution `{{variable}}`

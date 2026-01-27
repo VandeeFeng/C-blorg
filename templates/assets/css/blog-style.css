@@ -1,0 +1,844 @@
+@import url("https://fonts.googleapis.cn/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap");
+
+:root {
+  text-autospace: normal;
+}
+
+body {
+  font-family: "Exo 2", serif;
+  line-height: 1.6;
+  color: #586e75;
+  /* Solarized Light base01 */
+  background-color: #fdf6e3;
+  /* Solarized Light base3 */
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+header {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  position: relative;
+  min-height: 120px;
+}
+
+header h1 {
+  margin: 0;
+}
+
+
+a {
+  color: #073642;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  /* Handle long URLs - use overflow-wrap as primary method */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+
+}
+
+a:hover {
+  color: #268bd2;
+  text-decoration: none;
+}
+
+p a {
+  border-bottom: 1px dotted #073642;
+  /* 只给段落中的链接添加点虚线 */
+  transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+
+p a:hover {
+  border-bottom-color: #268bd2;
+  /* 悬停时改变虚线颜色 */
+}
+
+.org-ul li a {
+  border-bottom: 1px dotted #073642;
+  transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+
+.org-ul li a:hover {
+  border-bottom-color: #268bd2;
+}
+
+blockquote {
+  background-color: #eee8d5;
+  /* Solarized Light base2 */
+  border-left: 4px solid #93a1a1;
+  /* Solarized Light base1 */
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+  font-style: italic;
+  color: #657b83;
+  /* Solarized Light base00 */
+  position: relative;
+  border-radius: 0 4px 4px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+blockquote::before {
+  content: "";
+  font-size: 3em;
+  position: absolute;
+  left: 10px;
+  top: -10px;
+  color: #93a1a1;
+  /* Solarized Light base1 */
+  opacity: 0.5;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+blockquote p+p {
+  margin-top: 1em;
+}
+
+code {
+  font-family: "JetBrains Mono", "Menlo", "Monaco", "Consolas", "Courier New",
+               monospace;
+  font-size: 0.9em;
+  background-color: #eee8d5;
+  /* Solarized Light base2 */
+  color: #073642;
+  /* Solarized Light base02 */
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+footer {
+  text-align: center;
+}
+
+footer .footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+footer .footer-left {
+  display: flex;
+  align-items: center;
+}
+
+footer p {
+  margin: 0;
+  margin-right: 10px;
+  /* Adds some space between the text and the CC icon */
+}
+
+footer .social-links {
+  display: flex;
+  gap: 10px;
+}
+
+footer img {
+  height: 26px;
+  /* Increased height for a slightly bigger image */
+  width: auto;
+}
+
+mark {
+  background-color: #b58900;
+  color: #fdf6e3;
+  border-radius: 2px;
+}
+
+nav {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Align items to the start */
+  padding: 10px 0;
+}
+
+nav a {
+  margin-right: 15px;
+  /* Reduced from previous value if it was larger */
+  text-decoration: none;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+nav a:hover {
+  color: #268bd2;
+}
+
+nav#table-of-contents {
+  display: flex;
+  flex-direction: column;
+  margin: -20px 0 5px;
+}
+
+nav#table-of-contents h2 {
+  margin-bottom: 10px;
+}
+
+pre.src .hljs-attr,
+pre.src .hljs-attribute {
+  color: #e06c75;
+}
+
+pre.src .hljs-bullet,
+pre.src .hljs-symbol,
+pre.src .hljs-meta,
+pre.src .hljs-selector-id,
+pre.src .hljs-selector-class {
+  color: #c678dd;
+}
+
+pre.src .hljs-comment,
+pre.src .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+
+pre.src .hljs-doctag,
+pre.src .hljs-string {
+  color: #98c379;
+}
+
+pre.src .hljs-emphasis {
+  font-style: italic;
+}
+
+pre.src .hljs-keyword,
+pre.src .hljs-selector-tag,
+pre.src .hljs-subst {
+  color: #c678dd;
+}
+
+pre.src .hljs-literal,
+pre.src .hljs-number,
+pre.src .hljs-tag .hljs-attr,
+pre.src .hljs-template-variable,
+pre.src .hljs-variable {
+  color: #d19a66;
+}
+
+pre.src .hljs-regexp,
+pre.src .hljs-link {
+  color: #56b6c2;
+}
+
+pre.src .hljs-strong {
+  font-weight: bold;
+}
+
+pre.src .hljs-tag,
+pre.src .hljs-name,
+pre.src .hljs-title.function_ {
+  color: #61afef;
+}
+
+pre.src .hljs-title,
+pre.src .hljs-section,
+pre.src .hljs-title.class_ {
+  color: #e5c07b;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #fdf6e3;
+}
+
+td,
+th {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #fdf6e3;
+  color: #333;
+  font-weight: bold;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}
+
+tr:nth-child(even) {
+  background-color: #fdf6e3;
+}
+
+#content>*:not(#search-results) {
+  display: block;
+}
+
+#search-container {
+  margin-top: 10px;
+  margin-left: auto;
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+}
+
+#search-input {
+  padding: 8px;
+  border: 1px solid #93a1a1;
+  border-radius: 4px;
+  font-size: 0.9em;
+  background-color: #fdf6e3;
+  color: #586e75;
+  transition: border-color 0.3s ease;
+}
+
+#search-input:hover {
+  border-color: #268bd2;
+}
+
+#search-result {
+  margin-bottom: 20px;
+}
+
+#search-result a {
+  font-weight: bold;
+  color: #0066cc;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+#search-result a:hover {
+  color: #268bd2;
+}
+
+#search-result p {
+  margin: 5px 0;
+}
+
+#search-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+#text-table-of-contents {
+  margin-top: 0;
+}
+
+.org-src-container {
+  position: relative;
+  margin-bottom: 1.6em;
+}
+
+.copy-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: #93a1a1;
+  background-color: transparent;
+  border: 1px solid #93a1a1;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.copy-button:hover {
+  color: #fdf6e3;
+  background-color: #93a1a1;
+}
+
+.copy-button.copied {
+  color: #859900;
+  border-color: #859900;
+  pointer-events: none;
+}
+
+.org-src-container pre.src {
+  margin-top: 0;
+  background-color: #282c34;
+  border: 1px solid #3e4451;
+  /* border-left: 3px solid #528bff; */
+  color: #abb2bf;
+  page-break-inside: avoid;
+  font-family: "JetBrains Mono", "Menlo", "Monaco", "Consolas", "Courier New",
+               monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 100%;
+  overflow: auto;
+  padding: 1em 1.5em;
+  padding-top: 2.5em;
+  display: block;
+  word-wrap: break-word;
+  position: relative;
+  border-radius: 4px;
+}
+
+.org-src-container pre.src::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #282c34;
+  color: #abb2bf;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 4px 0 4px 0;
+  text-transform: lowercase;
+  font-family: "JetBrains Mono", monospace;
+  border-right: 1px solid #3e4451;
+  border-bottom: 1px solid #3e4451;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  content: attr(data-lang);
+  display: var(--show-lang-label, none);
+  /* 默认隐藏 */
+}
+
+/* 悬停效果 */
+.org-src-container pre.src:hover::before {
+  opacity: 1;
+  background-color: #3e4451;
+}
+
+.post-date {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.search-icon {
+  flex-grow: 1;
+  margin-left: 10px;
+  color: #586e75;
+  font-size: 1.2em;
+  transition: color 0.3s ease;
+}
+
+.search-icon:hover {
+  color: #268bd2;
+}
+
+.search-result {
+  background-color: #fdf6e3;
+  border: 1px solid #eee8d5;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 0.9em;
+}
+
+.search-result a {
+  font-size: 1.1em;
+  color: #073642;
+  text-decoration: none;
+  margin-bottom: 10px;
+  display: block;
+  transition: color 0.3s ease;
+}
+
+.search-result a:hover {
+  color: #268bd2;
+}
+
+.search-result-snippet {
+  background-color: #eee8d5;
+  border: 1px solid #93a1a1;
+  border-radius: 4px;
+  padding: 5px 5px 0;
+  margin-top: 5px;
+  font-size: 0.85em;
+}
+
+.social-links {
+  display: flex;
+  gap: 10px;
+}
+
+.social-links a {
+  text-decoration: none;
+  font-size: 1.5em;
+  color: #586e75;
+  margin-left: 10px;
+  transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #268bd2;
+}
+
+::selection {
+  background-color: #b58900;
+  /* Solarized Light yellow */
+  color: #fdf6e3;
+  /* Solarized Light base3 */
+}
+
+::-moz-selection {
+  background-color: #b58900;
+  /* Solarized Light yellow */
+  color: #fdf6e3;
+  /* Solarized Light base3 */
+}
+
+[data-fancybox="gallery"] {
+  cursor: pointer;
+}
+
+.top-link {
+  visibility: hidden;
+  position: fixed;
+  bottom: 5rem;
+  right: 10rem;
+  /* 使用视口宽度单位，5vw 表示屏幕宽度的 5% */
+  z-index: 99;
+  /* background: #f8f9fa;  /* replacing $gray-100 */
+  width: 4rem;
+  height: 4rem;
+  padding: 0.75rem;
+  border-radius: 4rem;
+  transition: visibility 0.5s, opacity 0.8s linear;
+}
+
+.top-link:focus,
+#theme-toggle:focus {
+  outline: 0;
+}
+
+
+
+.top-link {
+  font-size: 80%;
+  color: #073642;
+  /* replacing $fg-color with Solarized base02 */
+}
+
+@media only screen and (max-width: 768px) {
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #content h1.post-title {
+    font-size: 1.6em;
+    /* 移动端文章标题字体更小 */
+  }
+
+  #content,
+  header,
+  #search-container {
+    /*添加 header 和 search-container */
+    width: 100%;
+    max-width: 92%;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  header h1 {
+    font-size: 24px;
+  }
+
+  nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  nav a {
+    margin-bottom: 0;
+    margin-right: 15px;
+    white-space: nowrap;
+  }
+
+  .top-link {
+    right: 0.05rem;
+    bottom: 1rem;
+  }
+
+  pre.src {
+    font-size: 14px;
+    padding: 0.5em;
+  }
+
+  table {
+    font-size: 14px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  table th,
+  table td {
+    font-size: 12px;
+    /* Ensure consistent font size on mobile */
+    padding: 6px;
+  }
+
+  td,
+  th {
+    padding: 8px;
+  }
+
+  ul,
+  ol {
+    padding-left: 30px;
+    /* Reduced from 20px */
+    margin-bottom: 0.5em;
+  }
+
+  li {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+
+  /* 调整文章内容的边距 */
+  p,
+  blockquote,
+  .org-src-container,
+  table {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+  }
+
+  header {
+    padding: 10px 0;
+    /* 只保留上下内边距 */
+  }
+
+  #search-container {
+    max-width: 92%;
+    /* 与内容区域保持一致 */
+    margin: 10px auto;
+    /* 上下margin 10px，左右自动居中 */
+    padding: 0;
+    /* 移除内边距 */
+  }
+
+  #search-input {
+    width: 100%;
+    /* 搜索框占满容器宽度 */
+    box-sizing: border-box;
+  }
+
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+
+
+ul,
+ol {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin-bottom: 0.5em;
+}
+
+li {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+#content h1.title {
+  font-size: 1.9em;
+  /* 调整字体大小，缩小一点 */
+}
+
+#content h1.tags-title {
+  font-size: 1.8em;
+  /* 调整字体大小，缩小一点 */
+}
+
+#content h1 {
+  /*font-size: 2.1em;*/
+  margin-bottom: 0.7em;
+}
+
+#content h2 {
+  /*font-size: 1.7em;*/
+  margin-bottom: 0.6em;
+}
+
+#content h3 {
+  /*font-size: 1.35em;*/
+  margin-bottom: 0.5em;
+}
+
+#content h4 {
+  /*font-size: 1.1em;*/
+  margin-bottom: 0.4em;
+}
+
+#content h5 {
+  /*font-size: 0.9em;*/
+  margin-bottom: 0.3em;
+}
+
+#archive {
+  margin-top: 20px;
+  /* 添加上边距 */
+}
+
+.org-src-container pre {
+  max-height: 400px;
+  /* 设置最大高度 */
+  overflow: hidden;
+  /* 隐藏超出部分 */
+  transition: max-height 0.5s ease;
+  /* 平滑过渡效果 */
+}
+
+
+/* 展开和收起按钮的基本样式 */
+.toggle-button {
+  padding: 0.25rem 0.5rem;
+  /* 内边距 */
+  font-size: 0.8rem;
+  /* 字体大小 */
+  color: #93a1a1;
+  /* 字体颜色 */
+  background-color: transparent;
+  /* 背景透明 */
+  border: 1px solid #93a1a1;
+  /* 边框颜色 */
+  border-radius: 4px;
+  /* 圆角 */
+  cursor: pointer;
+  /* 鼠标指针样式 */
+  transition: all 0.3s ease;
+  /* 过渡效果 */
+}
+
+/* 悬停效果 */
+.toggle-button:hover {
+  color: #fdf6e3;
+  /* 悬停时字体颜色 */
+  background-color: #93a1a1;
+  /* 悬停时背景颜色 */
+}
+
+.expand-wrapper {
+  margin-top: 1rem;
+  /* 上边距 */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* 省略号和按钮之间的间距 */
+}
+
+/* 省略号样式 */
+.code-ellipsis {
+  color: #93a1a1;
+  /* 与按钮颜色保持一致 */
+  font-size: 1.2rem;
+  /* 稍微大一点的字体大小 */
+}
+
+
+/* 为包含标题的包装器设置合适的边距 */
+#content .heading-wrapper {
+  margin-bottom: 0.7em;
+}
+
+/* 保持锚点的样式不变，但确保它不影响布局 */
+.heading-anchor {
+  opacity: 0;
+  color: #93a1a1;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+  font-size: 1.3em;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  /*line-height: 1;*/
+  display: inline-flex;
+  align-items: center;
+  transform: translateY(-0.06em);
+  /* 向上微调 */
+}
+
+/* 当鼠标悬停在标题包装器上时显示锚点 */
+.heading-wrapper:hover .heading-anchor {
+  opacity: 1;
+}
+
+/* 当鼠标直接悬停在锚点上时的样式 */
+.heading-anchor:hover {
+  color: #268bd2;
+  text-decoration: none;
+}
+
+.heading-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: inherit;
+  /* 继承margin以保持原有的文档流间距 */
+  padding: 0;
+}
+
+.heading-wrapper h2,
+.heading-wrapper h3 {
+  margin: 0;
+  padding: 0;
+}
+
+/* Webkit浏览器的滚动条样式 */
+.org-src-container pre.src::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.org-src-container pre.src::-webkit-scrollbar-track {
+  background: #1f2937;
+  /* 深灰色轨道 */
+  border-radius: 4px;
+}
+
+
+/* 滚动条交叉处的样式 */
+.org-src-container pre.src::-webkit-scrollbar-corner {
+  background: #1f2937;
+}
+
+.org-src-container pre.src::-webkit-scrollbar-thumb {
+  background-color: #6b7280;
+  /* 深灰色滑块 */
+  border-radius: 3px;
+  border: 2px solid #1f2937;
+  /* 边框颜色与轨道颜色相同 */
+
+}
+
+.org-src-container pre.src::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+  /* 悬停时稍微亮一点 */
+}
+
+.shiba {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  user-select: none;
+  -webkit-user-drag: none;
+}

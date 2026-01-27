@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>404 - Page Not Found | Vandee's Blog</title>
+    <meta property="og:title" content="404 - Page Not Found">
+    <meta property="og:type" content="website" />
+    <meta name="author" content="Vandee">
+    <meta name="referrer" content="origin-when-cross-origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="assets/css/blog-style.css" type="text/css"/>
+    <link rel="stylesheet"
+          href="https://testingcf.jsdelivr.net/npm/remixicon@4.7.0/fonts/remix-icon.css"/>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+  </head>
+  <body>
+    <div id="preamble" class="status">
+      <header>
+        <h1><a href="https://www.vandee.art/blog/">Vandee's Blog</a></h1>
+        <nav>
+          <a href="https://www.vandee.art/blog/">Home</a>
+          <a href="https://x404.xyz/wiki">Wiki</a>
+          <a href="https://x404.xyz/photo">Photo</a>
+          <a href="archive.html">Archive</a>
+          <a href="tags.html">Tags</a>
+        </nav>
+      </header>
+    </div>
+
+    <div id="content" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
+      <h1 style="margin-bottom: 1em;">404 - Page Not Found</h1>
+      <p style="margin-bottom: 2em; color: #666;">Oops! The page you're looking for doesn't exist.</p>
+
+      <main>
+        <svg class="face" viewBox="0 0 320 380" width="320px" height="380px" aria-label="A 404 becomes a face, looks to the sides, and blinks. The 4s slide up, the 0 slides down, and then a mouth appears.">
+            <g
+               fill="none"
+               stroke="currentcolor"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               stroke-width="25"
+               >
+                <g class="face__eyes" transform="translate(0, 112.5)">
+                    <g transform="translate(15, 0)">
+                        <polyline class="face__eye-lid" points="37,0 0,120 75,120" />
+                        <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35" />
+                    </g>
+                    <g transform="translate(230, 0)">
+                        <polyline class="face__eye-lid" points="37,0 0,120 75,120" />
+                        <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35" />
+                    </g>
+                </g>
+                <rect class="face__nose" rx="4" ry="4" x="132.5" y="112.5" width="55" height="155" />
+                <g stroke-dasharray="102 102" transform="translate(65, 334)">
+                    <path class="face__mouth-left" d="M 0 30 C 0 30 40 0 95 0" stroke-dashoffset="-102" />
+                    <path class="face__mouth-right" d="M 95 0 C 150 0 190 30 190 30" stroke-dashoffset="102" />
+                </g>
+            </g>
+        </svg>
+      </main>
+
+      <div style="margin-top: 2em;">
+        <a href="https://www.vandee.art/blog/" class="back-home-btn" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background-color: #073642; color: #fdf6e3; text-decoration: none; border-radius: 4px; transition: all 0.3s ease;">
+          <i class="ri-arrow-left-line"></i>
+          Back to Home
+        </a>
+      </div>
+    </div>
+
+    <div id="postamble" class="status">
+      <footer>
+        <p>
+          © 2022-<script>document.write(new Date().getFullYear())</script> Vandee. All rights reserved.
+        </p>
+        <div class="social-links"></div>
+      </footer>
+    </div>
+
+    <style>
+      .face {
+        display: block;
+        width: 12em;
+        height: auto;
+        margin: 0 auto;
+      }
+
+      .face__eyes,
+      .face__eye-lid,
+      .face__mouth-left,
+      .face__mouth-right,
+      .face__nose,
+      .face__pupil {
+        animation: eyes 1s 0.3s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+      }
+
+      .face__eye-lid,
+      .face__pupil {
+        animation-duration: 4s;
+        animation-delay: 1.3s;
+        animation-iteration-count: infinite;
+      }
+
+      .face__eye-lid {
+        animation-name: eye-lid;
+      }
+
+      .face__mouth-left,
+      .face__mouth-right {
+        animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+      }
+
+      .face__mouth-left {
+        animation-name: mouth-left;
+      }
+
+      .face__mouth-right {
+        animation-name: mouth-right;
+      }
+
+      .face__nose {
+        animation-name: nose;
+      }
+
+      .face__pupil {
+        animation-name: pupil;
+      }
+
+      .back-home-btn:hover {
+        background-color: #268bd2;
+        transform: translateY(-2px);
+      }
+
+      /* Animations */
+      @keyframes eye-lid {
+        from,
+        40%,
+        45%,
+        to {
+          transform: translateY(0);
+        }
+        42.5% {
+          transform: translateY(17.5px);
+        }
+      }
+
+      @keyframes eyes {
+        from {
+          transform: translateY(112.5px);
+        }
+        to {
+          transform: translateY(15px);
+        }
+      }
+
+      @keyframes pupil {
+        from,
+        37.5%,
+        40%,
+        45%,
+        87.5%,
+        to {
+          stroke-dashoffset: 0;
+          transform: translate(0, 0);
+        }
+        12.5%,
+        25%,
+        62.5%,
+        75% {
+          stroke-dashoffset: 0;
+          transform: translate(-35px, 0);
+        }
+        42.5% {
+          stroke-dashoffset: 35;
+          transform: translate(0, 17.5px);
+        }
+      }
+
+      @keyframes mouth-left {
+        from,
+        50% {
+          stroke-dashoffset: -102;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes mouth-right {
+        from,
+        50% {
+          stroke-dashoffset: 102;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes nose {
+        from {
+          transform: translate(0, 0);
+        }
+        to {
+          transform: translate(0, 22.5px);
+        }
+      }
+
+      @media only screen and (max-width: 768px) {
+        .face {
+          width: 8em;
+        }
+
+        #content {
+          padding: 20px;
+        }
+      }
+    </style>
+  </body>
+</html>

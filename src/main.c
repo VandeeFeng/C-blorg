@@ -11,8 +11,8 @@ int main(int argc, char **argv) {
     printf("Org-Mode Static Site Generator v1.0\n");
     printf("===================================\n\n");
 
-    char *input_dir = "content";
-    char *output_dir = "output";
+    char *input_dir = "posts";
+    char *output_dir = "blog";
     char *template_dir = "templates";
     char *site_title = "My Blog";
 
@@ -58,6 +58,12 @@ int main(int argc, char **argv) {
     generate_tags_page(&builder);
     generate_individual_tag_pages(&builder);
     generate_archive_page(&builder);
+
+    printf("\nCopying template assets...\n");
+    int copy_errors = copy_template_assets(&builder);
+    if (copy_errors > 0) {
+        printf("\nWARNING: %d errors occurred during asset copying\n", copy_errors);
+    }
 
     printf("\nBuild complete!\n");
     return 0;

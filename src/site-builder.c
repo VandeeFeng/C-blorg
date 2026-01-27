@@ -157,6 +157,25 @@ static int render_and_write_page(Template *tpl, String *content, const char *out
     return result;
 }
 
+static String *generate_tags_html(const char *tags) {
+    String *tags_html = string_create(DEFAULT_STRING_BUFFER_SIZE);
+    if (strlen(tags) == 0) return tags_html;
+
+    char *tags_str = strdup(tags);
+    char *token = strtok(tags_str, " ");
+    while (token != NULL) {
+        string_append_cstr(tags_html, "<a href=\"tag/");
+        string_append_cstr(tags_html, token);
+        string_append_cstr(tags_html, ".html\">");
+        string_append_cstr(tags_html, token);
+        string_append_cstr(tags_html, "</a>");
+        token = strtok(NULL, " ");
+        if (token) string_append_cstr(tags_html, ", ");
+    }
+    free(tags_str);
+    return tags_html;
+}
+
 int process_org_file(SiteBuilder *builder, const char *input_path, const char *output_path) {
     FILE *f = fopen(input_path, "r");
     if (!f) {
@@ -199,26 +218,17 @@ int process_org_file(SiteBuilder *builder, const char *input_path, const char *o
     const char *raw_date = org_meta_get_date(meta);
     const char *tags = org_meta_get_tags(meta);
 
-    char *formatted_date = NULL;
-    if (raw_date) {
-        formatted_date = format_date(raw_date);
-    }
-
-    if (!title) title = "Untitled";
-    if (!description) description = "";
-    if (!formatted_date) formatted_date = "";
-    if (!tags) tags = "";
+    char *formatted_date = raw_date ? format_date(raw_date) : strdup("");
+    title = title ? title : "Untitled";
+    description = description ? description : "";
+    tags = tags ? tags : "";
 
     char *filename = get_filename_without_ext(output_path);
     char *filename_only = strrchr(filename, '/');
-    if (filename_only) {
-        filename_only++;
-    } else {
-        filename_only = filename;
-    }
+    filename_only = filename_only ? filename_only + 1 : filename;
 
-    Template *tpl = load_base_template(builder);
-    if (!tpl) {
+    Template *base_tpl = load_base_template(builder);
+    if (!base_tpl) {
         fprintf(stderr, "ERROR: Failed to load template for %s\n", input_path);
         free(filename);
         free(formatted_date);
@@ -228,8 +238,6 @@ int process_org_file(SiteBuilder *builder, const char *input_path, const char *o
         return 1;
     }
 
-    set_template_common_vars(tpl, builder, title, description, formatted_date, tags, filename_only);
-
     if (add_post_to_builder(builder, formatted_date, title, tags, filename_only) != 0) {
         fprintf(stderr, "ERROR: Failed to add post to builder\n");
         free(filename);
@@ -237,24 +245,59 @@ int process_org_file(SiteBuilder *builder, const char *input_path, const char *o
         free(content);
         org_free_metadata(meta);
         org_free_string(html);
-        template_free(tpl);
+        template_free(base_tpl);
         return 1;
     }
 
-    String *content_str = string_create(DEFAULT_STRING_BUFFER_SIZE);
-    string_append_cstr(content_str, html);
+    char *post_template_path = join_path(builder->template_dir, "post.html");
+    Template *post_tpl = template_create(post_template_path, builder->template_dir);
+    free(post_template_path);
 
-    render_and_write_page(tpl, content_str, output_path, output_path);
+    if (!post_tpl) {
+        fprintf(stderr, "ERROR: Failed to load post template for %s\n", input_path);
+        goto cleanup_error;
+    }
+
+    String *tags_html = generate_tags_html(tags);
+
+    template_set_var(post_tpl, "date", formatted_date);
+    template_set_var(post_tpl, "title", title);
+    template_set_var(post_tpl, "filename", filename_only);
+    template_set_var(post_tpl, "content", html);
+    template_set_var(post_tpl, "tags", string_to_cstr(tags_html));
+
+    String *post_content = string_create(DEFAULT_STRING_BUFFER_SIZE);
+    template_render(post_tpl, post_content);
+
+    set_template_common_vars(base_tpl, builder, title, description, "", "", filename_only);
+    template_set_var(base_tpl, "content", string_to_cstr(post_content));
+
+    String *output = string_create(OUTPUT_BUFFER_SIZE);
+    template_render(base_tpl, output);
+    write_html_file(output_path, output, output_path);
+
+    string_free(output);
+    string_free(post_content);
+    string_free(tags_html);
+    template_free(post_tpl);
 
     free(filename);
     free(formatted_date);
     free(content);
     org_free_metadata(meta);
     org_free_string(html);
-    template_free(tpl);
-    string_free(content_str);
-
+    template_free(base_tpl);
     return 0;
+
+cleanup_error:
+    free(filename);
+    free(formatted_date);
+    free(content);
+    org_free_metadata(meta);
+    org_free_string(html);
+    template_free(base_tpl);
+    template_free(post_tpl);
+    return 1;
 }
 
 static int process_regular_file(SiteBuilder *builder, const char *input_path, const char *output_dir, const char *filename) {
@@ -356,9 +399,41 @@ int generate_index_page(SiteBuilder *builder) {
     }
 
     String *content = string_create(DEFAULT_STRING_BUFFER_SIZE);
-
     int recent_count = builder->post_count > 5 ? 5 : builder->post_count;
-    return generate_page_with_posts(builder, content, builder->site_title, "Vandee's personal blog", "index.html", builder->posts, recent_count);
+    for (int i = 0; i < recent_count; i++) {
+        append_post_link(content, &builder->posts[i]);
+    }
+
+    char *template_path = join_path(builder->template_dir, "index.html");
+    Template *tpl = template_create(template_path, builder->template_dir);
+    free(template_path);
+
+    if (!tpl) {
+        fprintf(stderr, "ERROR: Failed to load index template\n");
+        string_free(content);
+        return 1;
+    }
+
+    template_set_var(tpl, "title", builder->site_title);
+    template_set_var(tpl, "description", "Vandee's personal blog");
+    template_set_var(tpl, "site_title", builder->site_title);
+    template_set_var(tpl, "content", string_to_cstr(content));
+    template_set_var(tpl, "date", "");
+    template_set_var(tpl, "tags", "");
+    template_set_var(tpl, "filename", "index.html");
+
+    String *output = string_create(OUTPUT_BUFFER_SIZE);
+    template_render(tpl, output);
+
+    char *output_path = join_path(builder->output_dir, "index.html");
+    int result = write_html_file(output_path, output, "index.html");
+
+    free(output_path);
+    template_free(tpl);
+    string_free(output);
+    string_free(content);
+
+    return result;
 }
 
 int generate_archive_page(SiteBuilder *builder) {
@@ -547,4 +622,102 @@ int generate_individual_tag_pages(SiteBuilder *builder) {
     free(tag_dir);
 
     return 0;
+}
+
+static int copy_file(const char *src, const char *dst) {
+    FILE *in = fopen(src, "rb");
+    if (!in) {
+        fprintf(stderr, "ERROR: Failed to open source file %s\n", src);
+        return 1;
+    }
+
+    FILE *out = fopen(dst, "wb");
+    if (!out) {
+        fprintf(stderr, "ERROR: Failed to open destination file %s\n", dst);
+        fclose(in);
+        return 1;
+    }
+
+    char buffer[8192];
+    size_t bytes;
+    while ((bytes = fread(buffer, 1, sizeof(buffer), in)) > 0) {
+        if (fwrite(buffer, 1, bytes, out) != bytes) {
+            fprintf(stderr, "ERROR: Failed to write to %s\n", dst);
+            fclose(in);
+            fclose(out);
+            return 1;
+        }
+    }
+
+    fclose(in);
+    fclose(out);
+    printf("Copied: %s -> %s\n", src, dst);
+    return 0;
+}
+
+static int copy_directory_recursive(const char *src_dir, const char *dst_dir) {
+    DIR *dir = opendir(src_dir);
+    if (!dir) {
+        fprintf(stderr, "ERROR: Failed to open source directory %s\n", src_dir);
+        return 1;
+    }
+
+    mkdir_p(dst_dir);
+
+    struct dirent *entry;
+    int error_count = 0;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char *src_path = join_path(src_dir, entry->d_name);
+        char *dst_path = join_path(dst_dir, entry->d_name);
+
+        struct stat st;
+        if (stat(src_path, &st) == 0) {
+            if (S_ISDIR(st.st_mode)) {
+                error_count += copy_directory_recursive(src_path, dst_path);
+            } else if (S_ISREG(st.st_mode)) {
+                error_count += copy_file(src_path, dst_path);
+            }
+        }
+
+        free(src_path);
+        free(dst_path);
+    }
+
+    closedir(dir);
+    return error_count;
+}
+
+static int copy_template_file(SiteBuilder *builder, const char *filename) {
+    char *src = join_path(builder->template_dir, filename);
+    char *dst = join_path(builder->output_dir, filename);
+    int result = copy_file(src, dst);
+    free(src);
+    free(dst);
+    return result;
+}
+
+static int copy_template_dir(SiteBuilder *builder, const char *dirname) {
+    char *src = join_path(builder->template_dir, dirname);
+    char *dst = join_path(builder->output_dir, dirname);
+    int result = copy_directory_recursive(src, dst);
+    free(src);
+    free(dst);
+    return result;
+}
+
+int copy_template_assets(SiteBuilder *builder) {
+    printf("\nCopying template assets...\n");
+
+    int error_count = 0;
+    error_count += copy_template_file(builder, "404.html");
+    error_count += copy_template_file(builder, "projects.html");
+    error_count += copy_template_dir(builder, "assets");
+    error_count += copy_template_dir(builder, "static");
+
+    return error_count;
 }

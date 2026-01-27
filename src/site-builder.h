@@ -45,5 +45,6 @@ int generate_index_page(SiteBuilder *builder);
 int generate_tags_page(SiteBuilder *builder);
 int generate_individual_tag_pages(SiteBuilder *builder);
 int generate_archive_page(SiteBuilder *builder);
+int copy_template_assets(SiteBuilder *builder);
 
 #endif
