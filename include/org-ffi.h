@@ -98,6 +98,17 @@ const char* org_meta_get_tags(const OrgMetadata* meta);
  */
 const char** org_meta_get_tags_array(const OrgMetadata* meta, size_t* out_count);
 
+/**
+ * Extract Table of Contents from org-mode content.
+ *
+ * @param input Null-terminated org-mode content string
+ * @param len Length of input string (excluding null terminator)
+ * @return Heap-allocated null-terminated HTML TOC string, or NULL on error
+ *
+ * The returned string must be freed using org_free_string().
+ */
+char* org_extract_toc(const char* input, size_t len);
+
 #ifdef __cplusplus
 }
 #endif

@@ -229,11 +229,14 @@ static int render_post_page(SiteBuilder *builder, OrgFileResources *r, const cha
 
     String *tags_html = generate_tags_html(tags);
 
+    char *toc = org_extract_toc(r->content, strlen(r->content));
+
     template_set_var(r->post_tpl, "date", r->formatted_date);
     template_set_var(r->post_tpl, "title", title);
     template_set_var(r->post_tpl, "filename", filename_only);
     template_set_var(r->post_tpl, "content", r->html);
     template_set_var(r->post_tpl, "tags", string_to_cstr(tags_html));
+    template_set_var(r->post_tpl, "toc", toc ? toc : "");
 
     String *post_content = string_create(DEFAULT_STRING_BUFFER_SIZE);
     template_render(r->post_tpl, post_content);
@@ -248,6 +251,7 @@ static int render_post_page(SiteBuilder *builder, OrgFileResources *r, const cha
     string_free(output);
     string_free(post_content);
     string_free(tags_html);
+    if (toc) org_free_string(toc);
     return 0;
 }
 

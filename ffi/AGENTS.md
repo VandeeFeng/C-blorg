@@ -11,6 +11,7 @@ Expose orgize parsing and HTML/metadata export through a C ABI for the C site bu
 - `org_parse_to_html` returns a heap-allocated C string; caller frees with `org_free_string`.
 - `org_extract_metadata` returns `OrgMetadata *`; caller frees with `org_free_metadata`.
 - All FFI entry points return null on invalid input (null pointer or zero length).
+- `OrgMetadata.tags_array` and its elements are heap-allocated; `org_free_metadata` owns freeing them.
 
 ## Patterns
 - When adding a new export, declare `#[no_mangle] extern "C"` in `ffi/src/lib.rs`, mirror it in `../include/org-ffi.h`, and provide a free function for owned memory.

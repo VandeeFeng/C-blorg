@@ -18,7 +18,7 @@ Custom org-mode static site generator in C with a Rust FFI parser/exporter.
 **Before modifying code in a subdirectory, read its AGENTS.md first** to understand local patterns and invariants.
 
 - **Rust FFI layer**: `ffi/AGENTS.md` - orgize-based parsing, HTML export, and C ABI bindings
-- **Tests**: `test/` - C test suites for parser, renderer, templates, strings, tokenizer, and FFI
+- **Tests**: `test/AGENTS.md` - C test suites for parser, renderer, templates, strings, tokenizer, and FFI
 
 ### Global Invariants
 

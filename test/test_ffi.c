@@ -9,6 +9,18 @@ static void assert_contains(const char *haystack, const char *needle) {
     assert(strstr(haystack, needle) != NULL);
 }
 
+static char *parse_html(const char *input) {
+    char *html = org_parse_to_html(input, strlen(input));
+    assert(html != NULL);
+    return html;
+}
+
+static char *extract_toc(const char *input) {
+    char *toc = org_extract_toc(input, strlen(input));
+    assert(toc != NULL);
+    return toc;
+}
+
 static char *read_file(const char *path) {
     FILE *f = fopen(path, "r");
     if (!f) {
@@ -32,11 +44,19 @@ static char *read_file(const char *path) {
     return content;
 }
 
+static char *read_file_or_skip(const char *path) {
+    char *content = read_file(path);
+    if (!content) {
+        printf("  SKIP (file not found)\n");
+    }
+    return content;
+}
+
 void test_parse_to_html(void) {
     printf("  test_parse_to_html...");
 
     char *input = "#+title: Test\n\n* Heading\n\nParagraph text.";
-    char *html = org_parse_to_html(input, strlen(input));
+    char *html = parse_html(input);
 
     assert_contains(html, "Heading");
     assert_contains(html, "Paragraph");
@@ -48,13 +68,10 @@ void test_parse_to_html(void) {
 void test_parse_from_file(void) {
     printf("  test_parse_from_file...");
 
-    char *content = read_file("test/test_issues.org");
-    if (!content) {
-        printf("  SKIP (file not found)\n");
-        return;
-    }
+    char *content = read_file_or_skip("test/test_issues.org");
+    if (!content) return;
 
-    char *html = org_parse_to_html(content, strlen(content));
+    char *html = parse_html(content);
     assert_contains(html, "First Heading");
     assert_contains(html, "https://example.com");
     assert_contains(html, "<img src=\"https://example.com/images/img.png\"");
@@ -97,11 +114,8 @@ void test_extract_metadata_title(void) {
 void test_extract_metadata_from_file(void) {
     printf("  test_extract_metadata_from_file...");
 
-    char *content = read_file("test/test_issues.org");
-    if (!content) {
-        printf("  SKIP (file not found)\n");
-        return;
-    }
+    char *content = read_file_or_skip("test/test_issues.org");
+    if (!content) return;
 
     OrgMetadata *meta = org_extract_metadata(content, strlen(content));
     assert(meta != NULL);
@@ -192,8 +206,7 @@ void test_complex_document(void) {
         "fn main() {}\n"
         "#+end_src";
 
-    char *html = org_parse_to_html(input, strlen(input));
-    assert(html != NULL);
+    char *html = parse_html(input);
     assert(strstr(html, "First Heading") != NULL);
     assert(strstr(html, "Sub Heading") != NULL);
     assert(strstr(html, "List item") != NULL);
@@ -213,9 +226,7 @@ void test_body_extraction(void) {
     printf("  test_body_extraction...");
 
     char *input = "#+title: Body Test\n\n* Main Heading\n\nParagraph content.";
-    char *html = org_parse_to_html(input, strlen(input));
-
-    assert(html != NULL);
+    char *html = parse_html(input);
     assert(strstr(html, "Main Heading") != NULL);
     assert(strstr(html, "Paragraph content") != NULL);
 
@@ -241,9 +252,7 @@ void test_url_punctuation(void) {
         "Parentheses: (https://example.com) （https://example.org）\n"
         "Mixed: https://example.com，测试文本.";
 
-    char *html = org_parse_to_html(input, strlen(input));
-
-    assert(html != NULL);
+    char *html = parse_html(input);
 
     assert(strstr(html, "href=\"https://example.com\"") != NULL);
     assert(strstr(html, "href=\"https://example.org\"") != NULL);
@@ -277,9 +286,7 @@ void test_url_balanced_parentheses(void) {
         "Multiple balanced parens: https://example.com/(nested)/(path).html\n"
         "Unmatched closing paren: http://example.com/test).html should stop at )";
 
-    char *html = org_parse_to_html(input, strlen(input));
-
-    assert(html != NULL);
+    char *html = parse_html(input);
 
     assert(strstr(html, "href=\"http://example.com/test(1).html\"") != NULL);
     assert(strstr(html, ">http://example.com/test(1).html</a>") != NULL);
@@ -335,6 +342,104 @@ void test_verbatim_url_no_link(void) {
     printf("  OK\n");
 }
 
+void test_extract_toc_basic(void) {
+    printf("  test_extract_toc_basic...");
+
+    char *input = "* First Heading\n\n* Second Heading\n\n* Third Heading";
+
+    char *toc = extract_toc(input);
+    assert(strstr(toc, "class=\"toc\"") != NULL);
+    assert(strstr(toc, "First Heading") != NULL);
+    assert(strstr(toc, "Second Heading") != NULL);
+    assert(strstr(toc, "Third Heading") != NULL);
+    assert(strstr(toc, "<ul>") != NULL);
+    assert(strstr(toc, "<li>") != NULL);
+    assert(strstr(toc, "<a href=") != NULL);
+
+    org_free_string(toc);
+    printf("  OK\n");
+}
+
+void test_extract_toc_nested(void) {
+    printf("  test_extract_toc_nested...");
+
+    char *input = "* Level 1\n\n** Level 2\n\n*** Level 3\n\n** Another Level 2\n\n* Back to Level 1";
+
+    char *toc = extract_toc(input);
+    assert(strstr(toc, "Level 1") != NULL);
+    assert(strstr(toc, "Level 2") != NULL);
+    assert(strstr(toc, "Level 3") != NULL);
+    assert(strstr(toc, "Another Level 2") != NULL);
+    assert(strstr(toc, "Back to Level 1") != NULL);
+
+    int ul_count = 0;
+    const char *pos = toc;
+    while ((pos = strstr(pos, "<ul>")) != NULL) {
+        ul_count++;
+        pos += 4;
+    }
+    assert(ul_count >= 2);
+
+    org_free_string(toc);
+    printf("  OK\n");
+}
+
+void test_extract_toc_empty(void) {
+    printf("  test_extract_toc_empty...");
+
+    char *input = "Just some text without headings.";
+
+    char *toc = extract_toc(input);
+    assert(strstr(toc, "class=\"toc\"") != NULL);
+
+    org_free_string(toc);
+
+    toc = org_extract_toc("", 0);
+    assert(toc == NULL);
+
+    toc = org_extract_toc(NULL, 0);
+    assert(toc == NULL);
+
+    printf("  OK\n");
+}
+
+void test_html_with_ids(void) {
+    printf("  test_html_with_ids...");
+
+    char *input = "#+title: Test\n\n* First Heading\n\nSome content.\n\n** Sub Heading\n\nMore content.";
+
+    char *html = parse_html(input);
+    assert(strstr(html, "id=\"first-heading\"") != NULL);
+    assert(strstr(html, "id=\"sub-heading\"") != NULL);
+    assert(strstr(html, "<h2 id=\"first-heading\">First Heading</h2>") != NULL);
+
+    org_free_string(html);
+    printf("  OK\n");
+}
+
+void test_toc_and_html_consistency(void) {
+    printf("  test_toc_and_html_consistency...");
+
+    char *input = "* Introduction\n\n* Getting Started\n\n** Installation\n\n** Configuration\n\n* Conclusion";
+
+    char *toc = extract_toc(input);
+    char *html = parse_html(input);
+
+    const char *href_intro = strstr(toc, "href=\"#introduction\"");
+    assert(href_intro != NULL);
+
+    assert(strstr(html, "id=\"introduction\"") != NULL);
+
+    const char *href_install = strstr(toc, "href=\"#installation\"");
+    assert(href_install != NULL);
+
+    assert(strstr(html, "id=\"installation\"") != NULL);
+
+    org_free_string(toc);
+    org_free_string(html);
+    printf("  OK\n");
+}
+
 int main(void) {
     printf("Running Rust FFI Tests\n");
     printf("======================\n\n");
@@ -353,6 +458,11 @@ int main(void) {
     test_url_punctuation();
     test_url_balanced_parentheses();
     test_verbatim_url_no_link();
+    test_extract_toc_basic();
+    test_extract_toc_nested();
+    test_extract_toc_empty();
+    test_html_with_ids();
+    test_toc_and_html_consistency();
 
     printf("\nAll tests passed!\n");
     return 0;

@@ -182,6 +182,25 @@ nav#table-of-contents h2 {
   margin-bottom: 10px;
 }
 
+nav#table-of-contents nav.toc {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+nav#table-of-contents nav.toc ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+nav#table-of-contents nav.toc li {
+  margin: 0.2em 0;
+}
+
+nav#table-of-contents nav.toc a {
+  margin-right: 0;
+}
+
 pre.src .hljs-attr,
 pre.src .hljs-attribute {
   color: #e06c75;

@@ -9,3 +9,4 @@ crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 orgize = { git = "https://github.com/PoiScript/orgize" }
+slugify = "0.1"
