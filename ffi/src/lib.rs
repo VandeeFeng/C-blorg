@@ -163,17 +163,18 @@ impl Traverser for HtmlExportWithUrls {
             Event::Leave(Container::Code(_)) => self.output += "</code>",
 
             Event::Enter(Container::SourceBlock(block)) => {
+                self.output += r#"<div class="org-src-container">"#;
                 if let Some(language) = block.language() {
                     let _ = write!(
                         &mut self.output,
-                        r#"<pre><code class="language-{}">"#,
+                        r#"<pre class="src src-{}">"#,
                         HtmlEscape(&language)
                     );
                 } else {
-                    self.output += r#"<pre><code>"#
+                    self.output += r#"<pre class="src">"#
                 }
             }
-            Event::Leave(Container::SourceBlock(_)) => self.output += "</code></pre>",
+            Event::Leave(Container::SourceBlock(_)) => self.output += "</pre></div>",
 
             Event::Enter(Container::QuoteBlock(_)) => self.output += "<blockquote>",
             Event::Leave(Container::QuoteBlock(_)) => self.output += "</blockquote>",
