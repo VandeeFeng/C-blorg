@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "site-builder.h"
+#include "site-builder/site-builder.h"
 
 int main(int argc, char **argv) {
     setbuf(stdout, NULL);

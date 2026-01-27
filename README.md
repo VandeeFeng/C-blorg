@@ -54,16 +54,16 @@ C-blorg--rust/
  │   ├── main.c           # Entry point
  │   ├── org-string.h/c   # Custom SDS-style dynamic string
  │   ├── template.h/c     # HTML template system with variable substitution
- │   ├── site-builder.h/c # Site building logic and file processing
+ │   ├── site-builder/    # Site building logic and file processing
  │   ├── tokenizer.h/c    # Org-mode tokenizer
  │   ├── parser.h/c       # Org-mode parser (AST generation)
  │   └── render.h/c       # HTML renderer from AST
  ├── include/
- │   └── org-ffi.h       # Generated Rust FFI header
+ │   └── org-ffi.h        # Generated Rust FFI header
  ├── ffi/
  │   ├── Cargo.toml
  │   └── src/lib.rs       # FFI wrapper around orgize library
- ├── templates/            # HTML templates
+ ├── templates/           # HTML templates
  ├── test/
 ```
 

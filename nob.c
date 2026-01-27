@@ -12,15 +12,24 @@ static const char *c_headers[] = {
     "src/org-string.h",
     "src/parser.h",
     "src/render.h",
-    "src/site-builder.h",
+    "src/site-builder/site-builder.h",
     "src/template.h",
     "src/tokenizer.h",
+    "src/site-builder/filesystem.h",
+    "src/site-builder/page-renderer.h",
+    "src/site-builder/org-parser.h",
+    "src/site-builder/post-management.h",
+    "src/site-builder/tag-pages.h",
 };
 
 static const char *core_sources[] = {
     "src/org-string.c",
     "src/template.c",
-    "src/site-builder.c",
+    "src/site-builder/filesystem.c",
+    "src/site-builder/page-renderer.c",
+    "src/site-builder/org-parser.c",
+    "src/site-builder/post-management.c",
+    "src/site-builder/tag-pages.c",
     "src/rss.c",
     "src/main.c",
 };
@@ -193,6 +202,6 @@ int main(int argc, char **argv)
     }
 
     nob_log(ERROR, "Unknown command: %s", argv[0]);
-    nob_log(INFO, "Usage: %s [build|clean|test|blog]", program);
+    nob_log(INFO, "Usage: %s [clean|test|blog]", program);
     return 1;
 }

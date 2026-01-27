@@ -10,13 +10,13 @@ Custom org-mode static site generator in C with a Rust FFI parser/exporter.
   - `test` - Build and run all test suites
   - `blog` - Build and run org-blog with args
 - `src/main.c` - CLI entry and build orchestration
-- `src/site-builder.c` - Directory processing and HTML generation
 - `ffi/src/lib.rs` - Rust orgize wrapper and C ABI exports
 
 ## Intent Layer
 
 **Before modifying code in a subdirectory, read its AGENTS.md first** to understand local patterns and invariants.
 
+- **Site builder**: `src/site-builder/AGENTS.md` - Modular static site generation (filesystem, org parsing, rendering, posts, tags)
 - **Rust FFI layer**: `ffi/AGENTS.md` - orgize-based parsing, HTML export, and C ABI bindings
 - **Tests**: `test/AGENTS.md` - C test suites for parser, renderer, templates, strings, tokenizer, and FFI
 
