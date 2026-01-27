@@ -1,6 +1,8 @@
 use orgize::{Org, export::{from_fn, Container, Event, TraversalContext, Traverser}, SyntaxKind};
 use orgize::export::HtmlEscape;
+use orgize::config::{ParseConfig, UseSubSuperscript};
 use orgize::rowan::ast::AstNode;
+use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
@@ -9,6 +11,8 @@ use std::fmt::Write;
 struct HtmlExportWithUrls {
     output: String,
     in_descriptive_list: Vec<bool>,
+    pending_attributes: Option<HashMap<String, String>>,
+    paragraph_start_len: Vec<usize>,
 }
 
 impl HtmlExportWithUrls {
@@ -16,56 +20,101 @@ impl HtmlExportWithUrls {
         HtmlExportWithUrls {
             output: String::new(),
             in_descriptive_list: Vec::new(),
+            pending_attributes: None,
+            paragraph_start_len: Vec::new(),
         }
     }
 
-    fn process_text_with_urls(output: &mut String, text: &str) {
-        let mut byte_pos = 0;
+    fn append_escaped_char(&mut self, c: char) {
+        let mut buf = [0; 4];
+        let s = c.encode_utf8(&mut buf);
+        let _ = write!(&mut self.output, "{}", HtmlEscape(s));
+    }
+
+    fn attrs_string(attrs: &HashMap<String, String>, skip_empty_alt: bool) -> String {
+        let mut attrs_str = String::new();
+        for (key, value) in attrs {
+            if skip_empty_alt && key.eq_ignore_ascii_case("alt") && value.is_empty() {
+                continue;
+            }
+            let _ = write!(attrs_str, r#" {}="{}""#, key, HtmlEscape(value));
+        }
+        attrs_str
+    }
+
+    fn take_pending_attrs_string(&mut self, skip_empty_alt: bool) -> String {
+        match self.pending_attributes.take() {
+            Some(attrs) => Self::attrs_string(&attrs, skip_empty_alt),
+            None => String::new(),
+        }
+    }
+
+    fn merge_pending_attributes(&mut self, parsed: HashMap<String, String>) {
+        if let Some(existing) = &mut self.pending_attributes {
+            existing.extend(parsed);
+        } else {
+            self.pending_attributes = Some(parsed);
+        }
+    }
+
+    fn process_text_with_urls(&mut self, text: &str) {
+        let mut char_pos = 0;
         let chars: Vec<char> = text.chars().collect();
 
-        while byte_pos < chars.len() {
-            if byte_pos + 7 <= chars.len()
-                && chars[byte_pos] == 'h'
-                && chars[byte_pos + 1] == 't'
-                && chars[byte_pos + 2] == 't'
-                && chars[byte_pos + 3] == 'p'
+        while char_pos < chars.len() {
+            if char_pos + 7 <= chars.len()
+                && chars[char_pos] == 'h'
+                && chars[char_pos + 1] == 't'
+                && chars[char_pos + 2] == 't'
+                && chars[char_pos + 3] == 'p'
             {
-                let start = byte_pos;
-                let maybe_result = if byte_pos + 8 <= chars.len()
-                    && chars[byte_pos + 4] == 's'
-                    && chars[byte_pos + 5] == ':'
-                    && chars[byte_pos + 6] == '/'
-                    && chars[byte_pos + 7] == '/'
+                let start = char_pos;
+                let maybe_result = if char_pos + 8 <= chars.len()
+                    && chars[char_pos + 4] == 's'
+                    && chars[char_pos + 5] == ':'
+                    && chars[char_pos + 6] == '/'
+                    && chars[char_pos + 7] == '/'
                 {
-                    Self::extract_url(&chars, byte_pos + 8, "https://")
-                } else if byte_pos + 7 <= chars.len()
-                    && chars[byte_pos + 4] == ':'
-                    && chars[byte_pos + 5] == '/'
-                    && chars[byte_pos + 6] == '/'
+                    Self::extract_url(&chars, char_pos + 8, "https://")
+                } else if char_pos + 7 <= chars.len()
+                    && chars[char_pos + 4] == ':'
+                    && chars[char_pos + 5] == '/'
+                    && chars[char_pos + 6] == '/'
                 {
-                    Self::extract_url(&chars, byte_pos + 7, "http://")
+                    Self::extract_url(&chars, char_pos + 7, "http://")
                 } else {
                     None
                 };
 
                 if let Some((url, end_pos)) = maybe_result {
                     if url.len() > 10 {
-                        let _ = write!(output, r#"<a href="{}">{}</a>"#, HtmlEscape(&url), HtmlEscape(&url));
-                        byte_pos = end_pos;
-                    } else {
-                        let c = chars[start];
-                        let _ = write!(output, "{}", HtmlEscape(&c.to_string()));
-                        byte_pos += 1;
+                        if Self::is_image_url(&url) && self.pending_attributes.is_some() {
+                            let attrs_str = self.take_pending_attrs_string(true);
+                            let _ = write!(
+                                &mut self.output,
+                                r#"<img src="{}"{}>"#,
+                                HtmlEscape(&url),
+                                attrs_str
+                            );
+                        } else {
+                            let attrs_str = self.take_pending_attrs_string(true);
+                            let _ = write!(
+                                &mut self.output,
+                                r#"<a href="{}"{}>{}</a>"#,
+                                HtmlEscape(&url),
+                                attrs_str,
+                                HtmlEscape(&url)
+                            );
+                        }
+                        char_pos = end_pos;
+                        continue;
                     }
-                } else {
-                    let c = chars[start];
-                    let _ = write!(output, "{}", HtmlEscape(&c.to_string()));
-                    byte_pos += 1;
                 }
+                self.append_escaped_char(chars[start]);
+                char_pos += 1;
             } else {
-                let c = chars[byte_pos];
-                let _ = write!(output, "{}", HtmlEscape(&c.to_string()));
-                byte_pos += 1;
+                self.append_escaped_char(chars[char_pos]);
+                char_pos += 1;
             }
         }
     }
@@ -117,9 +166,98 @@ impl HtmlExportWithUrls {
         }
     }
 
+    fn parse_attr_html(value: &str) -> HashMap<String, String> {
+        fn attr_key(token: &str) -> Option<&str> {
+            token.strip_prefix(':').or_else(|| token.strip_prefix('：'))
+        }
+
+        let mut attrs = HashMap::new();
+        let mut tokens = Vec::new();
+        let mut current = String::new();
+        let mut in_quotes = false;
+        let mut chars = value.chars().peekable();
+
+        let push_token = |tokens: &mut Vec<String>, current: &mut String| {
+            if !current.is_empty() {
+                tokens.push(std::mem::take(current));
+            }
+        };
+
+        while let Some(c) = chars.next() {
+            if c == '"' {
+                if in_quotes && chars.peek() == Some(&'"') {
+                    current.push('"');
+                    chars.next();
+                } else {
+                    in_quotes = !in_quotes;
+                }
+                continue;
+            }
+
+            if !in_quotes && c.is_whitespace() {
+                push_token(&mut tokens, &mut current);
+                continue;
+            }
+
+            current.push(c);
+        }
+
+        push_token(&mut tokens, &mut current);
+
+        let mut index = 0;
+        while index < tokens.len() {
+            let token = &tokens[index];
+            let Some(key) = attr_key(token) else {
+                index += 1;
+                continue;
+            };
+
+            if key.is_empty() {
+                index += 1;
+                continue;
+            }
+
+            let mut value = String::new();
+            if index + 1 < tokens.len() {
+                let next = &tokens[index + 1];
+                if attr_key(next).is_none() {
+                    value = next.clone();
+                    index += 1;
+                }
+            }
+
+            attrs.insert(key.to_string(), value);
+            index += 1;
+        }
+
+        attrs
+    }
+
+    fn is_image_url(url: &str) -> bool {
+        let lower = url.to_ascii_lowercase();
+        let mut trimmed = lower.as_str();
+        if let Some(split) = trimmed.split(|c| c == '?' || c == '#').next() {
+            trimmed = split;
+        }
+        trimmed.ends_with(".png")
+            || trimmed.ends_with(".jpg")
+            || trimmed.ends_with(".jpeg")
+            || trimmed.ends_with(".gif")
+            || trimmed.ends_with(".webp")
+            || trimmed.ends_with(".svg")
+            || trimmed.ends_with(".bmp")
+            || trimmed.ends_with(".avif")
+    }
+
     fn finish(self) -> String {
         self.output
     }
+}
+
+fn parse_org_with_config(org_str: &str) -> Org {
+    let mut config = ParseConfig::default();
+    config.use_sub_superscript = UseSubSuperscript::Brace;
+    config.parse(org_str)
 }
 
 impl Traverser for HtmlExportWithUrls {
@@ -138,8 +276,20 @@ impl Traverser for HtmlExportWithUrls {
             }
             Event::Leave(Container::Headline(_)) => {}
 
-            Event::Enter(Container::Paragraph(_)) => self.output += "<p>",
-            Event::Leave(Container::Paragraph(_)) => self.output += "</p>",
+            Event::Enter(Container::Paragraph(_)) => {
+                self.paragraph_start_len.push(self.output.len());
+                self.output += "<p>";
+            }
+            Event::Leave(Container::Paragraph(_)) => {
+                let start_len = self.paragraph_start_len.pop().unwrap_or(0);
+                let paragraph_open_len = "<p>".len();
+                if self.output.len() == start_len + paragraph_open_len {
+                    self.output.truncate(start_len);
+                } else {
+                    self.output += "</p>";
+                }
+                self.pending_attributes = None;
+            }
 
             Event::Enter(Container::Section(_)) => self.output += "<section>",
             Event::Leave(Container::Section(_)) => self.output += "</section>",
@@ -260,12 +410,14 @@ impl Traverser for HtmlExportWithUrls {
                 let path = link.path();
                 let path = path.trim_start_matches("file:");
 
+                let attrs_str = self.take_pending_attrs_string(false);
+
                 if link.is_image() {
-                    let _ = write!(&mut self.output, r#"<img src="{}">"#, HtmlEscape(&path));
+                    let _ = write!(&mut self.output, r#"<img src="{}"{}>"#, HtmlEscape(&path), attrs_str);
                     return ctx.skip();
                 }
 
-                let _ = write!(&mut self.output, r#"<a href="{}">"#, HtmlEscape(&path));
+                let _ = write!(&mut self.output, r#"<a href="{}"{}>"#, HtmlEscape(&path), attrs_str);
 
                 if !link.has_description() {
                     let _ = write!(&mut self.output, "{}</a>", HtmlEscape(&path));
@@ -275,7 +427,7 @@ impl Traverser for HtmlExportWithUrls {
             Event::Leave(Container::Link(_)) => self.output += "</a>",
 
             Event::Text(text) => {
-                Self::process_text_with_urls(&mut self.output, &text);
+                self.process_text_with_urls(&text);
             }
 
             Event::LineBreak(_) => self.output += "<br/>",
@@ -311,7 +463,15 @@ impl Traverser for HtmlExportWithUrls {
                 let _ = write!(&mut self.output, "{}", latex.syntax());
             }
 
-            Event::Enter(Container::Keyword(_)) => ctx.skip(),
+            Event::Enter(Container::Keyword(keyword)) => {
+                let key = keyword.key();
+                if key.eq_ignore_ascii_case("attr_html") {
+                    let value = keyword.value();
+                    let parsed = Self::parse_attr_html(&value);
+                    self.merge_pending_attributes(parsed);
+                }
+                ctx.skip();
+            },
 
             Event::Entity(entity) => self.output += entity.html(),
 
@@ -396,7 +556,7 @@ pub extern "C" fn org_parse_to_html(input: *const c_char, len: usize) -> *mut c_
             Err(_) => return ptr::null_mut(),
         };
 
-        let org = Org::parse(org_str);
+        let org = parse_org_with_config(org_str);
         let mut exporter = HtmlExportWithUrls::new();
         org.traverse(&mut exporter);
         let html = exporter.finish();
@@ -422,7 +582,7 @@ pub extern "C" fn org_extract_metadata(input: *const c_char, len: usize) -> *mut
             Err(_) => return ptr::null_mut(),
         };
 
-        let org = Org::parse(org_str);
+        let org = parse_org_with_config(org_str);
 
         let mut collector = MetadataCollector::new();
         let mut handler = from_fn(|event| collector.collect_from_event(event));

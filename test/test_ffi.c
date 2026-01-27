@@ -4,15 +4,42 @@
 #include <assert.h>
 #include "../include/org-ffi.h"
 
+static void assert_contains(const char *haystack, const char *needle) {
+    assert(haystack != NULL);
+    assert(strstr(haystack, needle) != NULL);
+}
+
+static char *read_file(const char *path) {
+    FILE *f = fopen(path, "r");
+    if (!f) {
+        return NULL;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    char *content = malloc(size + 1);
+    if (!content) {
+        fclose(f);
+        return NULL;
+    }
+
+    fread(content, 1, size, f);
+    content[size] = '\0';
+    fclose(f);
+
+    return content;
+}
+
 void test_parse_to_html(void) {
     printf("  test_parse_to_html...");
 
     char *input = "#+title: Test\n\n* Heading\n\nParagraph text.";
     char *html = org_parse_to_html(input, strlen(input));
 
-    assert(html != NULL);
-    assert(strstr(html, "Heading") != NULL);
-    assert(strstr(html, "Paragraph") != NULL);
+    assert_contains(html, "Heading");
+    assert_contains(html, "Paragraph");
 
     org_free_string(html);
     printf("  OK\n");
@@ -21,25 +48,19 @@ void test_parse_to_html(void) {
 void test_parse_from_file(void) {
     printf("  test_parse_from_file...");
 
-    FILE *f = fopen("test/test_issues.org", "r");
-    if (!f) {
+    char *content = read_file("test/test_issues.org");
+    if (!content) {
         printf("  SKIP (file not found)\n");
         return;
     }
 
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char *content = malloc(size + 1);
-    fread(content, 1, size, f);
-    content[size] = '\0';
-    fclose(f);
-
     char *html = org_parse_to_html(content, strlen(content));
-    assert(html != NULL);
-    assert(strstr(html, "First Heading") != NULL);
-    assert(strstr(html, "https://example.com") != NULL);
+    assert_contains(html, "First Heading");
+    assert_contains(html, "https://example.com");
+    assert_contains(html, "<img src=\"https://example.com/images/img.png\"");
+    assert_contains(html, "class=\"img\"");
+    assert_contains(html, "width=\"70%\"");
+    assert_contains(html, "height=\"70%\"");
 
     org_free_string(html);
     free(content);
@@ -76,20 +97,11 @@ void test_extract_metadata_title(void) {
 void test_extract_metadata_from_file(void) {
     printf("  test_extract_metadata_from_file...");
 
-    FILE *f = fopen("test/test_issues.org", "r");
-    if (!f) {
+    char *content = read_file("test/test_issues.org");
+    if (!content) {
         printf("  SKIP (file not found)\n");
         return;
     }
-
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char *content = malloc(size + 1);
-    fread(content, 1, size, f);
-    content[size] = '\0';
-    fclose(f);
 
     OrgMetadata *meta = org_extract_metadata(content, strlen(content));
     assert(meta != NULL);
@@ -98,8 +110,7 @@ void test_extract_metadata_from_file(void) {
     const char *date = org_meta_get_date(meta);
     const char *tags = org_meta_get_tags(meta);
 
-    assert(title != NULL);
-    assert(strstr(title, "Test Document") != NULL);
+    assert_contains(title, "Test Document");
     assert(date != NULL);
     assert(tags != NULL);
 
