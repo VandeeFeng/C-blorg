@@ -1,3 +1,20 @@
+/*
+ * ============================================================================
+ * DEPRECATED
+ * ============================================================================
+ *
+ * This header is deprecated and no longer used in the build system.
+ *
+ * The tokenization functionality has been replaced by the Rust FFI layer.
+ *
+ * Please use:
+ *   - ffi/src/lib.rs - Rust implementation (uses orgize library)
+ *   - include/org-ffi.h - C API for the FFI layer
+ *   - src/site-builder/org-parser.c - Wrapper for FFI parsing
+ *
+ * This file is kept for reference purposes only.
+ */
+
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
 

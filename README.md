@@ -1,6 +1,6 @@
-# Org-Mode Static Site Generator (C + Rust)
+# C-blorg
 
-A custom static site generator using C and Rust that parses org-mode documents and renders HTML, replicating the current blog design.
+A custom static site generator using C and Rust that parses org-mode documents and renders HTML.
 
 [bastibe/org-static-blog: A static site generator using org-mode](https://github.com/bastibe/org-static-blog) is convenient enough, but the generated page structure is fixed and it depends on `org export`.
 
@@ -10,7 +10,9 @@ This project uses [orgize](https://github.com/PoiScript/orgize) to replace `org 
 
 Like Hugo, this project includes a [templates/](templates/) directory, making it easy to customize templates. Just HTML and JavaScript，no more framework.
 
-This project using [nob.h](https://github.com/tsoding/nob.h) to build.
+Besides templates, the [custom/](templates/custom/) directory contains other parts of a site that are also customizable.
+
+This project uses [nob.h](https://github.com/tsoding/nob.h) for C building.
 
 <img src="Vandee's-Blog.png" alt="Vandee's Blog" width="500">
 
@@ -58,9 +60,9 @@ C-blorg--rust/
  │   ├── org-string.h/c   # Custom SDS-style dynamic string
  │   ├── template.h/c     # HTML template system with variable substitution
  │   ├── site-builder/    # Site building logic and file processing
- │   ├── tokenizer.h/c    # Org-mode tokenizer
- │   ├── parser.h/c       # Org-mode parser (AST generation)
- │   └── render.h/c       # HTML renderer from AST
+ │   ├── tokenizer.h/c    # Org-mode tokenizer - DEPRECATED
+ │   ├── parser.h/c       # Org-mode parser (AST generation) - DEPRECATED
+ │   └── render.h/c       # HTML renderer from AST - DEPRECATED
  ├── include/
  │   └── org-ffi.h        # Generated Rust FFI header
  ├── ffi/
@@ -87,7 +89,6 @@ C-blorg--rust/
 The project uses a hybrid C + Rust architecture:
 - **Rust FFI Layer** (`ffi/src/lib.rs`):
   - Wraps the [orgize](https://github.com/PoiScript/orgize) library
-  - Exposes C-compatible functions via `extern "C"`
   - Handles org-mode parsing and HTML generation
   - Extracts metadata (title, date, tags, description)
 
@@ -108,9 +109,14 @@ The project uses a hybrid C + Rust architecture:
   - Custom SDS-style dynamic strings with exponential growth
   - Memory-efficient string operations
 
+More details: [AGENTS.md](AGENTS.md)
+
 ## Related projects
 
 - **nob.h**: https://github.com/tsoding/nob.h (Header-only C build system)
 - **orgize**: https://github.com/PoiScript/orgize (Rust org-mode parser library)
 - **SDS (Redis strings)**: https://github.com/antirez/sds (String implementation reference)
-
+- The Shiba GIF is sourced from https://github.com/tonybaloney/vscode-pets
+- The 404 page: https://codepen.io/jkantner/pen/YPwZWoy
+- Special thanks to https://github.com/chenyo-17/org-static-blog and [org-static-blog](https://github.com/bastibe/org-static-blog).
+  That's where I started with org blog.

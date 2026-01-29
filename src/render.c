@@ -1,3 +1,20 @@
+/*
+ * ============================================================================
+ * DEPRECATED
+ * ============================================================================
+ *
+ * This file is deprecated and no longer used in the build system.
+ *
+ * The parsing and rendering functionality has been replaced by the Rust FFI layer.
+ *
+ * Please use:
+ *   - ffi/src/lib.rs - Rust implementation (uses orgize library)
+ *   - include/org-ffi.h - C API for the FFI layer
+ *   - src/site-builder/org-parser.c - Wrapper for FFI parsing
+ *
+ * This file is kept for reference purposes only.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
