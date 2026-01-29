@@ -727,7 +727,7 @@ pub extern "C" fn org_extract_metadata(input: *const c_char, len: usize) -> *mut
 
     let title_c = into_c_string_optional(collector.title.as_deref());
     let date_c = into_c_string_optional(collector.date.as_deref());
-    let description_c = into_c_string("");
+    let description_c = into_c_string_optional(collector.description.as_deref());
 
     let tags_str = collector.tags.join(" ");
     let tags_c = if tags_str.is_empty() {

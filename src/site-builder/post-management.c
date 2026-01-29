@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "site-builder/post-management.h"
 #include "site-builder.h"
 #include "site-builder/page-renderer.h"
 #include "site-builder/filesystem.h"
 #include "org-string.h"
 
-int add_post_to_builder(SiteBuilder *builder, const char *raw_date, const char *date, const char *title, const char *tags, const char *filename) {
+int add_post_to_builder(SiteBuilder *builder, const char *raw_date, const char *date, const char *title, const char *tags, const char *description, const char *filename) {
     if (builder->post_count >= builder->post_capacity) {
         int new_cap = builder->post_capacity == 0 ? INITIAL_POST_CAPACITY : builder->post_capacity * 2;
         PostInfo *new_posts = realloc(builder->posts, new_cap * sizeof(PostInfo));
@@ -22,13 +23,14 @@ int add_post_to_builder(SiteBuilder *builder, const char *raw_date, const char *
     builder->posts[builder->post_count].date = strdup(date);
     builder->posts[builder->post_count].title = strdup(title);
     builder->posts[builder->post_count].tags = strdup(tags);
+    builder->posts[builder->post_count].description = strdup(description);
     builder->posts[builder->post_count].filename = strdup(filename);
     builder->post_count++;
 
     return 0;
 }
 
-void append_post_link(String *content, PostInfo *post, const char *blog_base_url) {
+void append_post_link(String *content, PostInfo *post, const char *blog_base_url, bool show_description) {
     string_append_cstr(content, "<h2 class=\"post-title\"><a href=\"");
     string_append_cstr(content, blog_base_url);
     string_append_cstr(content, post->filename);
@@ -36,7 +38,15 @@ void append_post_link(String *content, PostInfo *post, const char *blog_base_url
     string_append_cstr(content, post->title);
     string_append_cstr(content, "</a></h2><div class=\"post-date\">");
     string_append_cstr(content, post->date);
-    string_append_cstr(content, "</div><div class=\"taglist\"><a href=\"");
+    string_append_cstr(content, "</div>");
+
+    if (show_description && strlen(post->description) > 0) {
+        string_append_cstr(content, "<p class=\"post-description\">");
+        string_append_cstr(content, post->description);
+        string_append_cstr(content, "</p>");
+    }
+
+    string_append_cstr(content, "<div class=\"taglist\"><a href=\"");
     string_append_cstr(content, blog_base_url);
     string_append_cstr(content, "tags.html\">Tags</a>: ");
 
@@ -72,7 +82,7 @@ void sort_posts(SiteBuilder *builder) {
 
 int generate_page_with_posts(SiteBuilder *builder, String *content, const char *title, const char *description, const char *filename, PostInfo *posts, int post_count) {
     for (int i = 0; i < post_count; i++) {
-        append_post_link(content, &posts[i], builder->blog_base_url);
+        append_post_link(content, &posts[i], builder->blog_base_url, false);
     }
 
     Template *tpl = load_base_template(builder);
@@ -94,7 +104,7 @@ int generate_page_with_posts(SiteBuilder *builder, String *content, const char *
     return result;
 }
 
-int generate_index_page(SiteBuilder *builder) {
+int generate_index_page(SiteBuilder *builder, bool show_description) {
     if (builder->post_count == 0) {
         printf("No posts to generate index page\n");
         return 0;
@@ -105,7 +115,7 @@ int generate_index_page(SiteBuilder *builder) {
     String *content = string_create(DEFAULT_STRING_BUFFER_SIZE);
     int recent_count = builder->post_count > 5 ? 5 : builder->post_count;
     for (int i = 0; i < recent_count; i++) {
-        append_post_link(content, &builder->posts[i], builder->blog_base_url);
+        append_post_link(content, &builder->posts[i], builder->blog_base_url, show_description);
     }
 
     char *template_path = join_path(builder->template_dir, "index.html");

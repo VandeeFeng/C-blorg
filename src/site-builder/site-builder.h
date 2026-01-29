@@ -1,6 +1,7 @@
 #ifndef SITE_BUILDER_H
 #define SITE_BUILDER_H
 
+#include <stdbool.h>
 #include "org-string.h"
 
 /* Constants */
@@ -20,6 +21,7 @@ typedef struct {
     char *date;
     char *title;
     char *tags;
+    char *description;
     char *filename;
 } PostInfo;
 
@@ -41,7 +43,7 @@ char *get_filename_without_ext(const char *filename);
 char *join_path(const char *dir, const char *file);
 int process_org_file(SiteBuilder *builder, const char *input_path, const char *output_path);
 int process_directory(SiteBuilder *builder, const char *input_dir, const char *output_dir);
-int generate_index_page(SiteBuilder *builder);
+int generate_index_page(SiteBuilder *builder, bool show_description);
 int generate_tags_page(SiteBuilder *builder);
 int generate_individual_tag_pages(SiteBuilder *builder);
 int generate_archive_page(SiteBuilder *builder);

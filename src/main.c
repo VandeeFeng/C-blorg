@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include "site-builder/site-builder.h"
 
@@ -11,20 +12,23 @@ int main(int argc, char **argv) {
     printf("Org-Mode Static Site Generator v1.0\n");
     printf("===================================\n\n");
 
+    /* blog config */
     char *input_dir = "posts";
     char *output_dir = "blog";
     char *template_dir = "templates";
     char *site_title = "Vandee's Blog";
     char *blog_base_url = "https://www.vandee.art/blog/";
+    bool show_index_description = true;
 
     int opt;
-    while ((opt = getopt(argc, argv, "o:c:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "o:c:t:d:")) != -1) {
         switch (opt) {
         case 'o': output_dir = optarg; break;
         case 'c': input_dir = optarg; break;
         case 't': template_dir = optarg; break;
+        case 'd': show_index_description = (strcmp(optarg, "true") == 0 || strcmp(optarg, "1") == 0); break;
         default:
-            fprintf(stderr, "Usage: %s [-o output_dir] [-c content_dir] [-t template_dir]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-o output_dir] [-c content_dir] [-t template_dir] [-d show_index_description (true/false, default true)]\n", argv[0]);
             return 1;
         }
     }
@@ -59,7 +63,7 @@ int main(int argc, char **argv) {
     }
 
     printf("\nGenerating index, tags, individual tag pages, and archive pages...\n");
-    generate_index_page(&builder);
+    generate_index_page(&builder, show_index_description);
     generate_tags_page(&builder);
     generate_individual_tag_pages(&builder);
     generate_archive_page(&builder);

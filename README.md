@@ -12,6 +12,8 @@ Like Hugo, this project includes a [templates/](templates/) directory, making it
 
 This project using [nob.h](https://github.com/tsoding/nob.h) to build.
 
+<img src="Vandee's-Blog.png" alt="Vandee's Blog" width="500">
+
 ## Quick start
 
 ```bash
@@ -23,9 +25,10 @@ Options:
 - `-o` - Output directory for generated HTML (default: `blog`)
 - `-c` - Content directory containing org-mode files (default: `posts`)
 - `-t` - Directory containing HTML templates (default: `templates`)
+- `-d` - Show article description on index page (default: `true`)
 
 ```bash
-./nob blog [-o output_dir] [-c content_dir] [-t template_dir]
+./nob blog [-o output_dir] [-c content_dir] [-t template_dir] [-d true|false]
 ```
 
 Other commands:

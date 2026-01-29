@@ -161,6 +161,8 @@ int process_org_file(SiteBuilder *builder, const char *input_path, const char *o
         return 1;
     }
 
+    add_post_to_builder(builder, raw_date ? raw_date : "", r.formatted_date, title, tags, description, filename_only);
+
     int result = render_post_page(builder, &r, title, description, tags, filename_only, output_path);
     free_org_file_resources(&r, 1);
     return result;

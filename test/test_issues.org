@@ -1,5 +1,6 @@
 #+title: Test Document
 #+date: 2026-01-26
+#+description: this is a test description
 #+filetags: test example
 
 * First Heading

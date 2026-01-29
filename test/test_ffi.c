@@ -122,10 +122,13 @@ void test_extract_metadata_from_file(void) {
 
     const char *title = org_meta_get_title(meta);
     const char *date = org_meta_get_date(meta);
+    const char *description = org_meta_get_description(meta);
     const char *tags = org_meta_get_tags(meta);
 
     assert_contains(title, "Test Document");
     assert(date != NULL);
+    assert(description != NULL);
+    assert(strcmp(description, "this is a test description") == 0);
     assert(tags != NULL);
 
     org_free_metadata(meta);
@@ -163,7 +166,7 @@ void test_extract_metadata_description(void) {
     assert(meta != NULL);
     const char *description = org_meta_get_description(meta);
     assert(description != NULL);
-    assert(strcmp(description, "") == 0);
+    assert(strcmp(description, "This is a test description") == 0);
 
     org_free_metadata(meta);
     printf("  OK\n");

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "site-builder/tag-pages.h"
 #include "site-builder.h"
 #include "site-builder/page-renderer.h"
@@ -98,7 +99,7 @@ void append_tag_group_content(String *content, TagGroup *tag, const char *blog_b
     string_append_cstr(content, tag->name);
     string_append_cstr(content, "\":</h1>\n");
     for (int j = 0; j < tag->count; j++) {
-        append_post_link(content, &tag->posts[j], blog_base_url);
+        append_post_link(content, &tag->posts[j], blog_base_url, false);
     }
 }
 
