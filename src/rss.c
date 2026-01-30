@@ -7,8 +7,9 @@
 #include "org-ffi.h"
 
 static const char *WEEKDAYS[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-static const char *MONTHS[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static const char *MONTHS[] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static char *format_rfc2822_date(int year, int month, int day, int hour, int minute) {
     struct tm tm = {
@@ -44,58 +45,6 @@ static char *convert_to_rfc2822(const char *org_date) {
     }
 
     return format_rfc2822_date(year, month, day, hour, minute);
-}
-
-static char *xml_escape(const char *input) {
-    if (!input) return strdup("");
-
-    size_t len = strlen(input);
-    size_t escaped_len = 0;
-
-    for (size_t i = 0; i < len; i++) {
-        switch (input[i]) {
-            case '&': escaped_len += 5; break;
-            case '<': escaped_len += 4; break;
-            case '>': escaped_len += 4; break;
-            case '\'': escaped_len += 6; break;
-            case '"': escaped_len += 6; break;
-            default: escaped_len += 1; break;
-        }
-    }
-
-    char *escaped = malloc(escaped_len + 1);
-    if (!escaped) return strdup("");
-
-    size_t pos = 0;
-    for (size_t i = 0; i < len; i++) {
-        switch (input[i]) {
-            case '&':
-                strcpy(escaped + pos, "&amp;");
-                pos += 5;
-                break;
-            case '<':
-                strcpy(escaped + pos, "&lt;");
-                pos += 4;
-                break;
-            case '>':
-                strcpy(escaped + pos, "&gt;");
-                pos += 4;
-                break;
-            case '\'':
-                strcpy(escaped + pos, "&apos;");
-                pos += 6;
-                break;
-            case '"':
-                strcpy(escaped + pos, "&quot;");
-                pos += 6;
-                break;
-            default:
-                escaped[pos++] = input[i];
-                break;
-        }
-    }
-    escaped[pos] = '\0';
-    return escaped;
 }
 
 static char *read_org_file(const char *path, size_t *out_size) {
@@ -152,9 +101,7 @@ static void write_description_tag(FILE *fp, const char *tag, const char *base_ur
 static void write_category_element(FILE *fp, const char *tag, const char *base_url, void *data) {
     (void)base_url;
     (void)data;
-    char *escaped = xml_escape(tag);
-    fprintf(fp, "  <category><![CDATA[%s]]></category>\n", escaped);
-    free(escaped);
+    fprintf(fp, "  <category><![CDATA[%s]]></category>\n", tag);
 }
 
 int generate_rss_feed(SiteBuilder *builder) {
@@ -178,11 +125,7 @@ int generate_rss_feed(SiteBuilder *builder) {
     fprintf(fp, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
     fprintf(fp, "<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n");
     fprintf(fp, "<channel>\n");
-
-    char *escaped_title = xml_escape(builder->site_title);
-    fprintf(fp, "<title><![CDATA[%s]]></title>\n", escaped_title);
-    free(escaped_title);
-
+    fprintf(fp, "<title><![CDATA[%s]]></title>\n", builder->site_title);
     fprintf(fp, "<description><![CDATA[%s]]></description>\n", builder->site_title);
     fprintf(fp, "<link>%s</link>\n", builder->blog_base_url);
 
@@ -204,11 +147,7 @@ int generate_rss_feed(SiteBuilder *builder) {
         snprintf(post_url, url_len, "%s%s.html", builder->blog_base_url, post->filename);
 
         fprintf(fp, "<item>\n");
-
-        escaped_title = xml_escape(post->title);
-        fprintf(fp, "  <title><![CDATA[%s]]></title>\n", escaped_title);
-        free(escaped_title);
-
+        fprintf(fp, "  <title><![CDATA[%s]]></title>\n", post->title);
         fprintf(fp, "  <description><![CDATA[");
 
         size_t org_path_len = strlen(builder->input_dir) + strlen(post->filename) + 6;
